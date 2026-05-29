@@ -1,0 +1,866 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Jontes Aquariumspiel</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        .draggable {
+            touch-action: none;
+            cursor: grab;
+        }
+        .draggable:active {
+            cursor: grabbing;
+        }
+        
+        #aquarium-tank {
+            position: relative;
+            overflow: hidden;
+            background: linear-gradient(180deg, #4fd1c5 0%, #2b6cb0 100%);
+            box-shadow: inset 0 0 20px rgba(0,0,0,0.3);
+        }
+
+        /* Cursor für den Kescher-Modus */
+        .cursor-net {
+            cursor: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='32' height='32' viewBox='0 0 24 24'%3E%3Cpath fill='%231f2937' d='M12 2a10 10 0 0 0-9.95 9h-1a1 1 0 0 0 0 2h1a10 10 0 0 0 19.9 0h1a1 1 0 0 0 0-2h-1A10 10 0 0 0 12 2zm0 18a8 8 0 0 1-7.93-7h15.86A8 8 0 0 1 12 20zm0-16a8 8 0 0 1 7.93 7H4.07A8 8 0 0 1 12 4z'/%3E%3C/svg%3E") 16 16, crosshair !important;
+        }
+
+        .bubble {
+            position: absolute;
+            bottom: -20px;
+            background: rgba(255, 255, 255, 0.3);
+            border-radius: 50%;
+            animation: rise linear infinite;
+        }
+
+        @keyframes rise {
+            0% { transform: translateY(0) scale(1); opacity: 0; }
+            20% { opacity: 1; }
+            100% { transform: translateY(-100vh) scale(1.5); opacity: 0; }
+        }
+
+        .tank-item {
+            position: absolute;
+            transform-origin: center center;
+            will-change: transform;
+        }
+
+        .tank-item svg {
+            /* CSS Transition wurde hier absichtlich entfernt, da sie das "strichartige" 
+               Quetschen beim Wenden und das "Rückwärts schwimmen" verursacht hat. */
+            transform-origin: center center;
+        }
+
+        .food-particle {
+            position: absolute;
+            width: 6px;
+            height: 6px;
+            background-color: #854d0e;
+            border-radius: 50%;
+            z-index: 5;
+        }
+
+        /* Styling für den Plastikbeutel der gefangenen Fische */
+        .plastic-bag {
+            position: relative;
+            background: rgba(224, 242, 254, 0.5);
+            border: 1px solid #7dd3fc;
+            border-radius: 0.5rem 0.5rem 1rem 1rem;
+            box-shadow: inset 0 0 15px rgba(255, 255, 255, 0.9);
+            width: 80px;
+            height: 80px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            flex-shrink: 0;
+        }
+        .plastic-bag::before {
+            content: '';
+            position: absolute;
+            top: 5px;
+            left: 5px;
+            right: 15px;
+            bottom: 25px;
+            background: linear-gradient(135deg, rgba(255,255,255,0.8) 0%, rgba(255,255,255,0) 100%);
+            border-radius: 0.25rem 0.25rem 0 0;
+            pointer-events: none;
+        }
+        .plastic-bag::after {
+            content: '';
+            position: absolute;
+            top: -8px;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 20px;
+            height: 10px;
+            background: rgba(224, 242, 254, 0.8);
+            border: 1px solid #7dd3fc;
+            border-radius: 50% 50% 0 0;
+            clip-path: polygon(0 0, 100% 0, 80% 100%, 20% 100%);
+        }
+    </style>
+</head>
+<body class="bg-gray-100 h-screen flex flex-col overflow-hidden select-none">
+
+    <header class="bg-blue-800 text-white p-4 shadow-md z-10 flex justify-between items-center">
+        <div>
+            <h1 class="text-3xl font-bold">Jontes Aquariumspiel</h1>
+        </div>
+        <div class="bg-blue-900 px-4 py-2 rounded-lg border-2 border-blue-400 text-center">
+            <span class="text-sm text-blue-200 block uppercase font-bold tracking-wider">Guthaben</span>
+            <span id="budget-display" class="text-2xl font-bold text-green-400">20,00 €</span>
+        </div>
+    </header>
+
+    <!-- Hauptbereich: Das Aquarium -->
+    <main id="aquarium-tank" class="flex-grow w-full border-b-8 border-yellow-700/50">
+        <div class="absolute bottom-0 w-full h-16 bg-yellow-600/80 rounded-t-3xl blur-[2px]"></div>
+        <div class="absolute bottom-0 w-full h-12 bg-yellow-500/90 rounded-t-xl" style="clip-path: polygon(0% 20%, 20% 0%, 40% 15%, 60% 0%, 80% 20%, 100% 5%, 100% 100%, 0% 100%);"></div>
+    </main>
+
+    <!-- Inventarbereich für gefangene Fische -->
+    <div class="bg-blue-50/80 h-32 border-b-2 border-gray-300 p-2 flex gap-4 shadow-inner relative">
+        <div id="inventory-area" class="flex-grow flex gap-4 overflow-x-auto items-center h-full pr-40">
+            <div id="empty-inventory-text" class="w-full text-center text-gray-400 italic text-sm">
+                Mit dem Kescher gefangene Fische landen in Plastikbeuteln hier.
+            </div>
+        </div>
+        
+        <!-- Verkaufsbereich rechts im Inventar -->
+        <div class="absolute right-2 top-2 bottom-2 w-36 bg-white border-2 border-green-200 rounded-lg shadow flex flex-col justify-center items-center p-2 z-10">
+            <span class="text-xs text-gray-500 font-bold">Gesamtwert:</span>
+            <span id="inventory-value-display" class="text-lg font-bold text-green-700 mb-2">0,00 €</span>
+            <button id="sell-btn" class="bg-green-500 hover:bg-green-600 text-white text-sm font-bold py-1 px-3 rounded shadow transition-colors disabled:opacity-50 disabled:cursor-not-allowed" disabled>
+                Verkaufen
+            </button>
+        </div>
+    </div>
+
+    <!-- Werkzeugleiste / Auswahlbereich -->
+    <footer class="bg-white p-3 shadow-[0_-4px_6px_-1px_rgba(0,0,0,0.1)] z-10 flex gap-6 items-start overflow-x-auto">
+        
+        <!-- Werkzeuge -->
+        <div class="flex gap-4 border-r-2 border-gray-200 pr-6 shrink-0 items-center">
+            <!-- Futterdose (Kostet jetzt 0,20€) -->
+            <div id="fish-food-btn" class="cursor-pointer transition-transform hover:scale-110 flex flex-col items-center">
+                <svg width="40" height="50" viewBox="0 0 40 50" xmlns="http://www.w3.org/2000/svg">
+                    <rect x="5" y="10" width="30" height="40" fill="#facc15" stroke="#ca8a04" stroke-width="2" rx="4"/>
+                    <rect x="0" y="5" width="40" height="8" fill="#eab308" stroke="#ca8a04" stroke-width="2" rx="2"/>
+                </svg>
+                <span class="text-xs text-yellow-700 mt-1 font-bold text-center">Füttern<br>(0,20 €)</span>
+            </div>
+
+            <!-- Kescher (Toggle) -->
+            <div id="net-btn" class="cursor-pointer transition-transform hover:scale-110 flex flex-col items-center p-2 rounded-lg">
+                <svg width="40" height="50" viewBox="0 0 50 60" xmlns="http://www.w3.org/2000/svg">
+                    <path d="M 25 20 C 10 20, 10 40, 25 40 C 40 40, 40 20, 25 20 Z" fill="none" stroke="#4b5563" stroke-width="4"/>
+                    <path d="M 15 25 L 35 35 M 15 35 L 35 25 M 20 20 L 20 40 M 30 20 L 30 40" stroke="#9ca3af" stroke-width="1"/>
+                    <path d="M 25 40 L 25 60" stroke="#8b5cf6" stroke-width="4" stroke-linecap="round"/>
+                </svg>
+                <span class="text-xs text-purple-700 mt-1 font-bold">Kescher</span>
+            </div>
+        </div>
+
+        <!-- Tiere -->
+        <div class="flex gap-4 shrink-0">
+            <div class="flex flex-col items-center">
+                <div class="draggable transition-transform hover:scale-110 h-[50px] flex items-center" data-type="clownfish" data-price="2.00">
+                    <svg width="50" height="35" viewBox="0 0 100 60" xmlns="http://www.w3.org/2000/svg">
+                        <path d="M 80 30 L 100 10 L 95 30 L 100 50 Z" fill="#ff7b00" stroke="#000" stroke-width="2"/>
+                        <ellipse cx="50" cy="30" rx="35" ry="20" fill="#ff7b00" stroke="#000" stroke-width="2"/>
+                        <path d="M 35 12 Q 40 30 35 48" fill="none" stroke="#fff" stroke-width="6"/>
+                        <path d="M 60 11 Q 65 30 60 49" fill="none" stroke="#fff" stroke-width="6"/>
+                        <circle cx="25" cy="25" r="4" fill="#fff" stroke="#000" stroke-width="1"/>
+                        <circle cx="24" cy="25" r="2" fill="#000"/>
+                    </svg>
+                </div>
+                <span class="text-xs font-bold text-gray-700">2,00 €</span>
+            </div>
+
+            <div class="flex flex-col items-center">
+                <div class="draggable transition-transform hover:scale-110 h-[50px] flex items-center" data-type="bluetang" data-price="5.50">
+                    <svg width="60" height="40" viewBox="0 0 120 70" xmlns="http://www.w3.org/2000/svg">
+                        <path d="M 90 35 L 120 15 L 115 35 L 120 55 Z" fill="#ffd700" stroke="#000" stroke-width="2"/>
+                        <path d="M 10 35 C 10 10, 50 5, 95 25 C 95 45, 50 65, 10 35 Z" fill="#0044ff" stroke="#000" stroke-width="2"/>
+                        <path d="M 30 20 C 50 15, 80 20, 90 35 C 80 40, 50 35, 30 20 Z" fill="#000"/>
+                        <circle cx="25" cy="30" r="5" fill="#fff" stroke="#000" stroke-width="1"/>
+                        <circle cx="23" cy="30" r="2" fill="#000"/>
+                    </svg>
+                </div>
+                <span class="text-xs font-bold text-gray-700">5,50 €</span>
+            </div>
+
+            <div class="flex flex-col items-center">
+                <div class="draggable transition-transform hover:scale-110 h-[50px] flex items-center" data-type="goldfish" data-price="1.50">
+                    <svg width="50" height="35" viewBox="0 0 100 70" xmlns="http://www.w3.org/2000/svg">
+                        <path d="M 75 35 Q 100 10 100 35 Q 100 60 75 35 Z" fill="#f97316" stroke="#c2410c" stroke-width="2"/>
+                        <ellipse cx="45" cy="35" rx="35" ry="25" fill="#f97316" stroke="#c2410c" stroke-width="2"/>
+                        <circle cx="20" cy="30" r="5" fill="#fff" stroke="#000" stroke-width="1"/>
+                        <circle cx="18" cy="30" r="2.5" fill="#000"/>
+                    </svg>
+                </div>
+                <span class="text-xs font-bold text-gray-700">1,50 €</span>
+            </div>
+
+            <div class="flex flex-col items-center">
+                <div class="draggable transition-transform hover:scale-110 h-[50px] flex items-center" data-type="angelfish" data-price="8.00">
+                    <svg width="40" height="45" viewBox="0 0 80 100" xmlns="http://www.w3.org/2000/svg">
+                        <path d="M 10 50 L 70 10 L 70 90 Z" fill="#e5e7eb" stroke="#9ca3af" stroke-width="2"/>
+                        <path d="M 30 40 L 30 60" stroke="#374151" stroke-width="4"/>
+                        <path d="M 50 25 L 50 75" stroke="#374151" stroke-width="4"/>
+                        <path d="M 70 50 L 90 30 L 90 70 Z" fill="#e5e7eb" stroke="#9ca3af" stroke-width="2"/>
+                        <circle cx="25" cy="50" r="3" fill="#fff" stroke="#000" stroke-width="1"/>
+                    </svg>
+                </div>
+                <span class="text-xs font-bold text-gray-700">8,00 €</span>
+            </div>
+
+            <div class="flex flex-col items-center">
+                <div class="draggable transition-transform hover:scale-110 h-[50px] flex items-center" data-type="shrimp" data-price="3.50">
+                    <svg width="45" height="35" viewBox="0 0 60 50" xmlns="http://www.w3.org/2000/svg">
+                        <path d="M 10 40 Q 20 20 40 20 Q 50 30 45 40" fill="none" stroke="#f87171" stroke-width="8" stroke-linecap="round"/>
+                        <path d="M 45 40 L 55 45 L 45 50 Z" fill="#f87171"/>
+                        <path d="M 25 35 L 20 45 M 30 36 L 28 48 M 35 34 L 35 48" stroke="#f87171" stroke-width="2"/>
+                        <path d="M 10 25 Q 5 10 15 5 M 12 25 Q 0 15 5 5" fill="none" stroke="#fca5a5" stroke-width="1"/>
+                        <circle cx="15" cy="22" r="2" fill="#000"/>
+                    </svg>
+                </div>
+                <span class="text-xs font-bold text-gray-700">3,50 €</span>
+            </div>
+
+            <div class="flex flex-col items-center">
+                <div class="draggable transition-transform hover:scale-110 h-[50px] flex items-center" data-type="clam" data-price="12.00">
+                    <svg width="40" height="30" viewBox="0 0 50 40" xmlns="http://www.w3.org/2000/svg">
+                        <path d="M 5 35 C 0 15 20 0 45 15 C 48 30 30 40 5 35 Z" fill="#4c1d95" stroke="#312e81" stroke-width="2"/>
+                        <circle cx="20" cy="25" r="5" fill="#fdf8f5"/>
+                        <path d="M 5 35 C 10 20 25 15 45 25 C 42 35 20 40 5 35 Z" fill="#6d28d9" stroke="#312e81" stroke-width="2"/>
+                        <path d="M 15 25 L 10 32 M 25 22 L 20 35 M 35 24 L 30 35" stroke="#312e81" stroke-width="1"/>
+                    </svg>
+                </div>
+                <span class="text-xs font-bold text-gray-700">12,00 €</span>
+            </div>
+        </div>
+
+        <!-- Pflanzen & Steine -->
+        <div class="flex gap-4 shrink-0 border-l-2 border-gray-200 pl-4">
+            <div class="flex flex-col items-center">
+                <div class="draggable transition-transform hover:scale-110 h-[50px] flex items-center" data-type="plant" data-price="2.00">
+                    <svg width="25" height="50" viewBox="0 0 40 100" xmlns="http://www.w3.org/2000/svg">
+                        <path d="M 20 100 Q 10 75 25 50 T 20 0" fill="none" stroke="#22c55e" stroke-width="8" stroke-linecap="round"/>
+                    </svg>
+                </div>
+                <span class="text-xs font-bold text-gray-700">2,00 €</span>
+            </div>
+
+            <div class="flex flex-col items-center">
+                <div class="draggable transition-transform hover:scale-110 h-[50px] flex items-center" data-type="redplant" data-price="2.50">
+                    <svg width="25" height="50" viewBox="0 0 40 100" xmlns="http://www.w3.org/2000/svg">
+                        <path d="M 20 100 Q 0 70 20 40 T 15 0" fill="none" stroke="#be123c" stroke-width="6" stroke-linecap="round"/>
+                        <path d="M 20 100 Q 40 80 20 50 T 35 15" fill="none" stroke="#e11d48" stroke-width="4" stroke-linecap="round"/>
+                        <path d="M 20 100 Q 10 90 25 60 T 5 30" fill="none" stroke="#9f1239" stroke-width="5" stroke-linecap="round"/>
+                    </svg>
+                </div>
+                <span class="text-xs font-bold text-gray-700">2,50 €</span>
+            </div>
+
+            <div class="flex flex-col items-center">
+                <div class="draggable transition-transform hover:scale-110 h-[50px] flex items-center" data-type="seagrass" data-price="1.50">
+                    <svg width="25" height="50" viewBox="0 0 30 110" xmlns="http://www.w3.org/2000/svg">
+                        <path d="M 15 110 L 5 10" fill="none" stroke="#4ade80" stroke-width="4" stroke-linecap="round"/>
+                        <path d="M 15 110 L 15 5" fill="none" stroke="#22c55e" stroke-width="5" stroke-linecap="round"/>
+                        <path d="M 15 110 L 25 15" fill="none" stroke="#16a34a" stroke-width="4" stroke-linecap="round"/>
+                    </svg>
+                </div>
+                <span class="text-xs font-bold text-gray-700">1,50 €</span>
+            </div>
+            
+            <div class="flex flex-col items-center">
+                <div class="draggable transition-transform hover:scale-110 h-[50px] flex items-center" data-type="stone" data-price="0.50">
+                    <svg width="40" height="30" viewBox="0 0 60 40" xmlns="http://www.w3.org/2000/svg">
+                        <path d="M 10 35 C 0 35, 0 20, 15 10 C 30 0, 50 5, 55 20 C 60 30, 50 35, 40 35 Z" fill="#78716c" stroke="#57534e" stroke-width="2"/>
+                    </svg>
+                </div>
+                <span class="text-xs font-bold text-gray-700">0,50 €</span>
+            </div>
+
+            <div class="flex flex-col items-center">
+                <div class="draggable transition-transform hover:scale-110 h-[50px] flex items-center" data-type="granite" data-price="1.00">
+                    <svg width="40" height="30" viewBox="0 0 50 45" xmlns="http://www.w3.org/2000/svg">
+                        <polygon points="10,40 0,20 15,5 35,0 50,15 45,35 30,45" fill="#4b5563" stroke="#374151" stroke-width="2"/>
+                        <polygon points="15,35 10,20 20,10 35,15 40,30 25,35" fill="#6b7280"/>
+                    </svg>
+                </div>
+                <span class="text-xs font-bold text-gray-700">1,00 €</span>
+            </div>
+
+            <div class="flex flex-col items-center">
+                <div class="draggable transition-transform hover:scale-110 h-[50px] flex items-center" data-type="sandstone" data-price="0.80">
+                    <svg width="45" height="30" viewBox="0 0 80 40" xmlns="http://www.w3.org/2000/svg">
+                        <ellipse cx="40" cy="25" rx="35" ry="15" fill="#d97706" stroke="#b45309" stroke-width="2"/>
+                        <path d="M 10 25 Q 40 15 70 25" fill="none" stroke="#b45309" stroke-width="2"/>
+                        <path d="M 15 20 Q 40 10 65 20" fill="none" stroke="#f59e0b" stroke-width="2"/>
+                        <ellipse cx="35" cy="15" rx="20" ry="10" fill="#f59e0b" stroke="#b45309" stroke-width="2"/>
+                    </svg>
+                </div>
+                <span class="text-xs font-bold text-gray-700">0,80 €</span>
+            </div>
+        </div>
+    </footer>
+
+    <script>
+        const tank = document.getElementById('aquarium-tank');
+        const draggables = document.querySelectorAll('.draggable');
+        const inventoryArea = document.getElementById('inventory-area');
+        const emptyInventoryText = document.getElementById('empty-inventory-text');
+        const budgetDisplay = document.getElementById('budget-display');
+        const inventoryValueDisplay = document.getElementById('inventory-value-display');
+        const sellBtn = document.getElementById('sell-btn');
+        
+        const aquariumItems = [];
+        const foodParticles = [];
+        
+        let draggedElement = null;
+        let currentType = null;
+        let currentBasePrice = 0;
+        let offsetX = 0, offsetY = 0;
+
+        let budget = 20.00;
+        let currentInventoryValue = 0.00;
+
+        function updateUI() {
+            budgetDisplay.innerText = formatCurrency(budget);
+            inventoryValueDisplay.innerText = formatCurrency(currentInventoryValue);
+            if (currentInventoryValue > 0) {
+                sellBtn.disabled = false;
+            } else {
+                sellBtn.disabled = true;
+            }
+        }
+
+        // --- Kescher-Status ---
+        let isNetActive = false;
+        const netBtn = document.getElementById('net-btn');
+        
+        netBtn.addEventListener('click', () => {
+            isNetActive = !isNetActive;
+            if (isNetActive) {
+                netBtn.classList.add('bg-purple-200');
+                tank.classList.add('cursor-net');
+            } else {
+                netBtn.classList.remove('bg-purple-200');
+                tank.classList.remove('cursor-net');
+            }
+        });
+
+        // Kescher: Klick auf das Aquarium
+        tank.addEventListener('click', (e) => {
+            if (!isNetActive) return;
+
+            const rect = tank.getBoundingClientRect();
+            const clickX = e.clientX - rect.left;
+            const clickY = e.clientY - rect.top;
+
+            for (let i = aquariumItems.length - 1; i >= 0; i--) {
+                const item = aquariumItems[i];
+                if (item.isAnimal || item.isClam) {
+                    const centerX = item.x + item.width / 2;
+                    const centerY = item.y + item.height / 2;
+                    
+                    const dx = clickX - centerX;
+                    const dy = clickY - centerY;
+                    const distance = Math.sqrt(dx * dx + dy * dy);
+
+                    if (distance < 50 * item.sizeMultiplier) {
+                        catchFish(item, i);
+                        break; 
+                    }
+                }
+            }
+        });
+
+        function catchFish(item, index) {
+            aquariumItems.splice(index, 1);
+            item.element.remove();
+            
+            emptyInventoryText.style.display = 'none';
+
+            const bagDiv = document.createElement('div');
+            bagDiv.className = 'plastic-bag flex flex-col items-center justify-center shrink-0';
+            
+            const svgClone = item.svgElement.cloneNode(true);
+            svgClone.style.transform = `scale(${item.sizeMultiplier})`;
+            svgClone.style.transition = 'none';
+            bagDiv.appendChild(svgClone);
+
+            const priceTag = document.createElement('div');
+            priceTag.className = 'absolute bottom-1 bg-white px-2 py-0.5 rounded text-[10px] font-bold text-green-700 shadow-sm z-10';
+            priceTag.innerText = formatCurrency(item.currentPrice);
+            bagDiv.appendChild(priceTag);
+
+            inventoryArea.appendChild(bagDiv);
+
+            currentInventoryValue += item.currentPrice;
+            updateUI();
+        }
+
+        // --- Hintergrund-Blasen ---
+        function createBubbles() {
+            for (let i = 0; i < 15; i++) {
+                const bubble = document.createElement('div');
+                bubble.classList.add('bubble');
+                const size = Math.random() * 10 + 5;
+                bubble.style.width = `${size}px`;
+                bubble.style.height = `${size}px`;
+                bubble.style.left = `${Math.random() * 100}%`;
+                bubble.style.animationDuration = `${Math.random() * 4 + 4}s`;
+                bubble.style.animationDelay = `${Math.random() * 5}s`;
+                tank.appendChild(bubble);
+            }
+        }
+        createBubbles();
+
+        // --- Fischfutter (0,20€ Kosten) ---
+        const foodBtn = document.getElementById('fish-food-btn');
+        foodBtn.addEventListener('click', () => {
+            if (budget >= 0.20) {
+                budget -= 0.20;
+                updateUI();
+                const amount = Math.floor(Math.random() * 4) + 3;
+                for(let i=0; i<amount; i++) {
+                    spawnFoodParticle();
+                }
+            } else {
+                // Rotes Blinken, wenn kein Geld da ist
+                foodBtn.classList.add('bg-red-200', 'rounded', 'transition-colors', 'duration-300');
+                setTimeout(() => foodBtn.classList.remove('bg-red-200', 'rounded', 'transition-colors', 'duration-300'), 300);
+            }
+        });
+
+        class FoodParticle {
+            constructor(x, y) {
+                this.x = x;
+                this.y = y;
+                this.vy = 0;
+                this.gravity = 0.01 + Math.random() * 0.02; // Futter sinkt jetzt deutlich langsamer
+                // Bleibt im unteren Drittel des Wassers stehen (70% bis 85% der Höhe), statt im Sand zu versinken
+                this.floorY = tank.clientHeight * 0.7 + Math.random() * (tank.clientHeight * 0.15);
+                this.isEaten = false;
+
+                this.element = document.createElement('div');
+                this.element.className = 'food-particle';
+                this.element.style.transform = `translate(${this.x}px, ${this.y}px)`;
+                tank.appendChild(this.element);
+            }
+
+            update() {
+                if (this.isEaten) return;
+                if (this.y < this.floorY) {
+                    this.vy += this.gravity;
+                    if (this.vy > 0.8) this.vy = 0.8; // Maximale Fallgeschwindigkeit verringert
+                    this.y += this.vy;
+                    this.x += Math.sin(this.y * 0.05) * 0.5;
+                    this.element.style.transform = `translate(${this.x}px, ${this.y}px)`;
+                } else {
+                    // Futter schwebt sanft auf der Stelle, sobald es seinen Haltepunkt im Wasser erreicht hat
+                    this.x += Math.sin(Date.now() * 0.002 + this.y) * 0.1;
+                    this.element.style.transform = `translate(${this.x}px, ${this.y}px)`;
+                }
+            }
+
+            eat() {
+                this.isEaten = true;
+                this.element.remove();
+            }
+        }
+
+        function spawnFoodParticle() {
+            const x = tank.clientWidth / 2 - 100 + Math.random() * 200;
+            const y = -10;
+            foodParticles.push(new FoodParticle(x, y));
+        }
+
+        // --- Hilfsfunktion Währung ---
+        function formatCurrency(value) {
+            return value.toFixed(2).replace('.', ',') + ' €';
+        }
+
+        // --- Verkauf-Logik ---
+        sellBtn.addEventListener('click', () => {
+            if (currentInventoryValue > 0) {
+                budget += currentInventoryValue;
+                currentInventoryValue = 0;
+                
+                const bags = inventoryArea.querySelectorAll('.plastic-bag');
+                bags.forEach(bag => bag.remove());
+                
+                emptyInventoryText.style.display = 'block';
+                updateUI();
+            }
+        });
+
+        // --- Drag & Drop ---
+        draggables.forEach(item => {
+            item.addEventListener('pointerdown', startDrag);
+        });
+
+        function startDrag(e) {
+            if (isNetActive) return; 
+            e.preventDefault();
+            
+            const originalElement = e.currentTarget;
+            currentBasePrice = parseFloat(originalElement.dataset.price);
+
+            if (budget < currentBasePrice) {
+                originalElement.classList.add('bg-red-200', 'rounded', 'transition-colors', 'duration-300');
+                setTimeout(() => originalElement.classList.remove('bg-red-200', 'rounded', 'transition-colors', 'duration-300'), 300);
+                return;
+            }
+            
+            currentType = originalElement.dataset.type;
+            
+            draggedElement = originalElement.cloneNode(true);
+            draggedElement.style.position = 'fixed';
+            draggedElement.style.pointerEvents = 'none';
+            draggedElement.style.zIndex = '9999';
+            draggedElement.classList.remove('hover:scale-110');
+            
+            document.body.appendChild(draggedElement);
+            
+            const rect = originalElement.getBoundingClientRect();
+            offsetX = rect.width / 2;
+            offsetY = rect.height / 2;
+            
+            moveDrag(e);
+            document.addEventListener('pointermove', moveDrag);
+            document.addEventListener('pointerup', endDrag);
+        }
+
+        function moveDrag(e) {
+            if (!draggedElement) return;
+            draggedElement.style.left = `${e.clientX - offsetX}px`;
+            draggedElement.style.top = `${e.clientY - offsetY}px`;
+        }
+
+        function endDrag(e) {
+            if (!draggedElement) return;
+
+            const tankRect = tank.getBoundingClientRect();
+            if (e.clientX >= tankRect.left && e.clientX <= tankRect.right &&
+                e.clientY >= tankRect.top && e.clientY <= tankRect.bottom) {
+                
+                const dropX = e.clientX - tankRect.left - offsetX;
+                const dropY = e.clientY - tankRect.top - offsetY;
+                
+                budget -= currentBasePrice;
+                updateUI();
+
+                const svgContent = draggedElement.querySelector('svg').outerHTML;
+                spawnItem(currentType, dropX, dropY, svgContent, currentBasePrice);
+            }
+
+            draggedElement.remove();
+            draggedElement = null;
+            currentType = null;
+            
+            document.removeEventListener('pointermove', moveDrag);
+            document.removeEventListener('pointerup', endDrag);
+        }
+
+        // --- Klassen für Objekte im Aquarium ---
+        class AquariumItem {
+            constructor(type, startX, startY, svgContent, basePrice) {
+                this.type = type;
+                this.x = startX;
+                this.y = startY;
+                
+                this.basePrice = basePrice;
+                this.currentPrice = basePrice;
+                this.sizeMultiplier = 1.0;
+                this.framesAlive = 0;
+                
+                this.isAnimal = (['clownfish', 'bluetang', 'goldfish', 'angelfish', 'shrimp'].includes(type));
+                this.isClam = (type === 'clam');
+                this.isPlant = (['plant', 'redplant', 'seagrass'].includes(type)); // Neu: Pflanzen erkennen
+                
+                this.element = document.createElement('div');
+                this.element.className = 'tank-item';
+                this.element.innerHTML = svgContent;
+                this.svgElement = this.element.querySelector('svg');
+                
+                // Pflanzen sollen vom Boden aus nach oben wachsen
+                if (this.isPlant) {
+                    this.svgElement.style.transformOrigin = "bottom center";
+                }
+                
+                tank.appendChild(this.element);
+
+                const rect = this.element.getBoundingClientRect();
+                this.width = rect.width;
+                this.height = rect.height;
+
+                if (this.isAnimal) {
+                    this.baseSpeed = (Math.random() * 0.8) + 0.5;
+                    if (type === 'shrimp') this.baseSpeed *= 0.5;
+                    
+                    this.speed = this.baseSpeed;
+                    // Startrichtung direkt festlegen
+                    this.vx = (Math.random() > 0.5 ? 1 : -1) * this.speed;
+                    this.vy = 0;
+                    this.targetedFood = null;
+                    this.pickNewTarget();
+                } else {
+                    this.vy = 0;
+                    this.gravity = 0.2;
+                    this.floorY = tank.clientHeight - this.height - (Math.random() * 10); 
+                    if (this.isClam) this.floorY += 5;
+
+                    // Maximale Wuchshöhe für Pflanzen berechnen (max. 2/3 des Aquariums)
+                    if (this.isPlant) {
+                        const targetHeight = tank.clientHeight * 0.66;
+                        this.maxSizeMultiplier = targetHeight / this.height;
+                        if (this.maxSizeMultiplier > 4) this.maxSizeMultiplier = 4; // Absolutes Limit zur Sicherheit
+                    }
+                }
+
+                this.updateTransform();
+            }
+
+            pickNewTarget() {
+                const marginX = this.width;
+                const marginY = this.height;
+                
+                // Ziel-Koordinaten sicher innerhalb des Beckens wählen
+                const minX = marginX;
+                const maxX = tank.clientWidth - marginX * 2;
+                this.targetX = minX + Math.random() * (maxX - minX);
+                
+                if (this.type === 'shrimp') {
+                    this.targetY = tank.clientHeight - 60 - Math.random() * 40;
+                } else {
+                    // Flacheres Schwimmen: Zielhöhe nah an aktueller Höhe wählen
+                    let yDelta = (Math.random() * 100) - 50;
+                    this.targetY = this.y + yDelta;
+                    
+                    // Verhindern, dass Ziele außerhalb des Beckens liegen
+                    const minY = marginY + 20;
+                    const maxY = tank.clientHeight - marginY - 60;
+                    if (this.targetY < minY) this.targetY = minY + Math.random() * 30;
+                    if (this.targetY > maxY) this.targetY = maxY - Math.random() * 30;
+                }
+            }
+
+            update() {
+                if (this.isAnimal || this.isClam || this.isPlant) {
+                    this.framesAlive++;
+                    if (this.framesAlive % 600 === 0) {
+                        if (this.isAnimal || this.isClam) {
+                            this.currentPrice += 0.05;
+                        } else if (this.isPlant) {
+                            this.currentPrice += 0.02; // Auch Pflanzen steigen leicht im Wert
+                        }
+
+                        if (this.isClam && this.sizeMultiplier < 2.0) {
+                            this.sizeMultiplier += 0.1;
+                        }
+
+                        // Pflanzen wachsen dynamisch bis zur Maximalgröße
+                        if (this.isPlant && this.sizeMultiplier < this.maxSizeMultiplier) {
+                            this.sizeMultiplier += 0.05;
+                            this.svgElement.style.transform = `scale(${this.sizeMultiplier})`;
+                        }
+                    }
+                }
+
+                if (this.isAnimal) {
+                    if (!this.targetedFood || this.targetedFood.isEaten) {
+                        this.targetedFood = null;
+                        this.speed = this.baseSpeed;
+                        let closestFood = null;
+                        let minDistance = 300;
+
+                        foodParticles.forEach(food => {
+                            if (!food.isEaten) {
+                                const dx = food.x - this.x;
+                                const dy = food.y - this.y;
+                                const dist = Math.sqrt(dx * dx + dy * dy);
+                                if (dist < minDistance) {
+                                    minDistance = dist;
+                                    closestFood = food;
+                                }
+                            }
+                        });
+
+                        if (closestFood) {
+                            this.targetedFood = closestFood;
+                            this.speed = this.baseSpeed * 2.5; 
+                        }
+                    }
+
+                    if (this.targetedFood) {
+                        this.targetX = this.targetedFood.x;
+                        this.targetY = this.targetedFood.y;
+                    }
+
+                    const dx = this.targetX - this.x;
+                    const dy = this.targetY - this.y;
+                    const distance = Math.sqrt(dx * dx + dy * dy);
+
+                    // Fang-Radius leicht erhöht, damit sie das Futter besser schnappen
+                    if (distance < 25) {
+                        if (this.targetedFood) {
+                            this.targetedFood.eat();
+                            this.targetedFood = null;
+                            if (this.sizeMultiplier < 2.0) { 
+                                this.sizeMultiplier += 0.08;
+                                this.currentPrice += 0.40; 
+                            }
+                        }
+                        this.pickNewTarget();
+                    } else {
+                        if (this.targetedFood && distance < 60) {
+                            // "Zuschnappen": Wenn das Futter sehr nah ist, starre Verfolgung ohne weiche Kurven (verhindert Kreisen!)
+                            this.vx = (dx / distance) * this.speed;
+                            this.vy = (dy / distance) * this.speed;
+                        } else {
+                            // Sehr viel agilere Steuerung für enge Radien
+                            let desiredVx = (dx / distance) * this.speed;
+                            let desiredVy = (dy / distance) * this.speed;
+
+                            // Schwimmen abflachen, wenn kein Futter gejagt wird
+                            if (!this.targetedFood) {
+                                desiredVy *= 0.2;
+                            }
+
+                            // Deutlich höhere Lenkgeschwindigkeit für schnelle Wendemanöver
+                            const turnSpeed = this.targetedFood ? 0.3 : 0.15; 
+                            this.vx += (desiredVx - this.vx) * turnSpeed;
+                            this.vy += (desiredVy - this.vy) * turnSpeed;
+
+                            // Geschwindigkeit normalisieren
+                            const currentV = Math.sqrt(this.vx * this.vx + this.vy * this.vy);
+                            if (currentV > 0) {
+                                this.vx = (this.vx / currentV) * this.speed;
+                                this.vy = (this.vy / currentV) * this.speed;
+                            }
+                        }
+
+                        this.x += this.vx;
+                        this.y += this.vy;
+                    }
+
+                    // --- ABSOLUTE GRENZEN (Boundaries) ---
+                    // Verhindert, dass Fische das Aquarium verlassen
+                    const padX = (this.width * this.sizeMultiplier) / 2;
+                    const padY = (this.height * this.sizeMultiplier) / 2;
+                    const centerX = this.x + this.width / 2;
+                    const centerY = this.y + this.height / 2;
+                    
+                    let hitWall = false;
+
+                    // Links / Rechts
+                    if (centerX - padX < 0) {
+                        this.x = padX - this.width / 2;
+                        this.vx = Math.abs(this.vx); // Abprallen nach rechts
+                        hitWall = true;
+                    } else if (centerX + padX > tank.clientWidth) {
+                        this.x = tank.clientWidth - padX - this.width / 2;
+                        this.vx = -Math.abs(this.vx); // Abprallen nach links
+                        hitWall = true;
+                    }
+                    
+                    // Oben (Wasseroberfläche)
+                    if (centerY - padY < 20) {
+                        this.y = 20 + padY - this.height / 2;
+                        this.vy = Math.abs(this.vy);
+                        hitWall = true;
+                    }
+                    
+                    // Unten (Sand)
+                    let maxBottom = tank.clientHeight - 40; 
+                    if (this.type === 'shrimp') maxBottom = tank.clientHeight - 5; // Garnele darf tiefer
+                    
+                    if (centerY + padY > maxBottom) {
+                        this.y = maxBottom - padY - this.height / 2;
+                        this.vy = -Math.abs(this.vy);
+                        hitWall = true;
+                    }
+
+                    // Wenn eine Wand berührt wurde, sofort neues Ziel im Becken suchen
+                    if (hitWall && !this.targetedFood) {
+                        this.pickNewTarget();
+                    }
+
+                    // Ausrichtung & Drehung ohne CSS Animation (verhindert "strichartiges" Quetschen)
+                    let scaleX = 1;
+                    let angle = 0;
+                    const tiltFactor = 15;
+
+                    if (this.vx > 0) {
+                        scaleX = -1; // Blick nach rechts
+                        angle = (this.vy / this.speed) * tiltFactor * -1; 
+                    } else {
+                        scaleX = 1;  // Blick nach links
+                        angle = (this.vy / this.speed) * tiltFactor;
+                    }
+
+                    this.element.style.transform = `translate(${this.x}px, ${this.y}px)`;
+                    this.svgElement.style.transform = `scaleX(${scaleX * this.sizeMultiplier}) scaleY(${this.sizeMultiplier}) rotate(${angle}deg)`;
+
+                } else {
+                    if (this.y < this.floorY) {
+                        this.vy += this.gravity;
+                        this.y += this.vy;
+                        
+                        if (this.y > this.floorY) {
+                            this.y = this.floorY;
+                            this.vy = 0;
+                        }
+                        this.element.style.transform = `translate(${this.x}px, ${this.y}px)`;
+                        this.svgElement.style.transform = `scale(${this.sizeMultiplier})`;
+                    }
+                }
+            }
+
+            updateTransform() {
+                this.element.style.transform = `translate(${this.x}px, ${this.y}px)`;
+            }
+        }
+
+        function spawnItem(type, x, y, svgContent, price) {
+            aquariumItems.push(new AquariumItem(type, x, y, svgContent, price));
+        }
+
+        function gameLoop() {
+            for (let i = aquariumItems.length - 1; i >= 0; i--) {
+                aquariumItems[i].update();
+            }
+            
+            for (let i = foodParticles.length - 1; i >= 0; i--) {
+                foodParticles[i].update();
+                if (foodParticles[i].isEaten) {
+                    foodParticles.splice(i, 1);
+                }
+            }
+            
+            requestAnimationFrame(gameLoop);
+        }
+
+        gameLoop();
+
+        window.addEventListener('resize', () => {
+            aquariumItems.forEach(item => {
+                if (item.isAnimal) {
+                    item.pickNewTarget(); 
+                } else {
+                    item.floorY = tank.clientHeight - item.height - (Math.random() * 10);
+                    if (item.y > item.floorY) {
+                        item.y = item.floorY;
+                        item.updateTransform();
+                    }
+                }
+            });
+        });
+    </script>
+</body>
+</html>
