@@ -32,6 +32,7 @@
             background: rgba(255, 255, 255, 0.3);
             border-radius: 50%;
             animation: rise linear infinite;
+            z-index: 1; /* Blasen im Hintergrund */
         }
 
         @keyframes rise {
@@ -40,15 +41,15 @@
             100% { transform: translateY(-100vh) scale(1.5); opacity: 0; }
         }
 
+        /* Normale Fische und Pflanzen schwimmen VOR dem hinteren Sand, aber manche können hinter den vorderen tauchen */
         .tank-item {
             position: absolute;
             transform-origin: center center;
             will-change: transform;
+            z-index: 15; 
         }
 
         .tank-item svg {
-            /* CSS Transition wurde hier absichtlich entfernt, da sie das "strichartige" 
-               Quetschen beim Wenden und das "Rückwärts schwimmen" verursacht hat. */
             transform-origin: center center;
         }
 
@@ -58,7 +59,7 @@
             height: 6px;
             background-color: #854d0e;
             border-radius: 50%;
-            z-index: 5;
+            z-index: 15;
         }
 
         /* Styling für den Plastikbeutel der gefangenen Fische */
@@ -115,12 +116,17 @@
 
     <!-- Hauptbereich: Das Aquarium -->
     <main id="aquarium-tank" class="flex-grow w-full border-b-8 border-yellow-700/50">
-        <div class="absolute bottom-0 w-full h-16 bg-yellow-600/80 rounded-t-3xl blur-[2px]"></div>
-        <div class="absolute bottom-0 w-full h-12 bg-yellow-500/90 rounded-t-xl" style="clip-path: polygon(0% 20%, 20% 0%, 40% 15%, 60% 0%, 80% 20%, 100% 5%, 100% 100%, 0% 100%);"></div>
+        <!-- Hinterer Sand (Tiefe) -->
+        <div class="absolute bottom-0 w-full h-16 bg-yellow-600/80 rounded-t-3xl blur-[2px] z-0"></div>
+        
+        <!-- Aal-Layer ist z-index: 5 (automatisch durch JS) -->
+
+        <!-- Vorderer Sand (verdeckt den Aal beim Auftauchen) -->
+        <div class="absolute bottom-0 w-full h-12 bg-yellow-500/90 rounded-t-xl z-10" style="clip-path: polygon(0% 20%, 20% 0%, 40% 15%, 60% 0%, 80% 20%, 100% 5%, 100% 100%, 0% 100%);"></div>
     </main>
 
     <!-- Inventarbereich für gefangene Fische -->
-    <div class="bg-blue-50/80 h-32 border-b-2 border-gray-300 p-2 flex gap-4 shadow-inner relative">
+    <div class="bg-blue-50/80 h-32 border-b-2 border-gray-300 p-2 flex gap-4 shadow-inner relative z-20">
         <div id="inventory-area" class="flex-grow flex gap-4 overflow-x-auto items-center h-full pr-40">
             <div id="empty-inventory-text" class="w-full text-center text-gray-400 italic text-sm">
                 Mit dem Kescher gefangene Fische landen in Plastikbeuteln hier.
@@ -138,11 +144,11 @@
     </div>
 
     <!-- Werkzeugleiste / Auswahlbereich -->
-    <footer class="bg-white p-3 shadow-[0_-4px_6px_-1px_rgba(0,0,0,0.1)] z-10 flex gap-6 items-start overflow-x-auto">
+    <footer class="bg-white p-3 shadow-[0_-4px_6px_-1px_rgba(0,0,0,0.1)] z-20 flex gap-6 items-start overflow-x-auto">
         
         <!-- Werkzeuge -->
         <div class="flex gap-4 border-r-2 border-gray-200 pr-6 shrink-0 items-center">
-            <!-- Futterdose (Kostet jetzt 0,20€) -->
+            <!-- Futterdose -->
             <div id="fish-food-btn" class="cursor-pointer transition-transform hover:scale-110 flex flex-col items-center">
                 <svg width="40" height="50" viewBox="0 0 40 50" xmlns="http://www.w3.org/2000/svg">
                     <rect x="5" y="10" width="30" height="40" fill="#facc15" stroke="#ca8a04" stroke-width="2" rx="4"/>
@@ -240,6 +246,18 @@
                 </div>
                 <span class="text-xs font-bold text-gray-700">12,00 €</span>
             </div>
+
+            <!-- NEU: Seestern -->
+            <div class="flex flex-col items-center">
+                <div class="draggable transition-transform hover:scale-110 h-[50px] flex items-center" data-type="starfish" data-price="4.50">
+                    <svg width="40" height="40" viewBox="0 0 50 50" xmlns="http://www.w3.org/2000/svg">
+                        <path d="M 25 5 L 31 18 L 45 20 L 35 30 L 38 45 L 25 38 L 12 45 L 15 30 L 5 20 L 19 18 Z" fill="#ef4444" stroke="#b91c1c" stroke-width="2" stroke-linejoin="round"/>
+                        <circle cx="20" cy="22" r="1.5" fill="#000"/>
+                        <circle cx="30" cy="22" r="1.5" fill="#000"/>
+                    </svg>
+                </div>
+                <span class="text-xs font-bold text-gray-700">4,50 €</span>
+            </div>
         </div>
 
         <!-- Pflanzen & Steine -->
@@ -319,6 +337,7 @@
         
         const aquariumItems = [];
         const foodParticles = [];
+        let currentEel = null; // Speichert den aktiven Röhrenaal
         
         let draggedElement = null;
         let currentType = null;
@@ -361,9 +380,22 @@
             const clickX = e.clientX - rect.left;
             const clickY = e.clientY - rect.top;
 
+            // 1. Zuerst prüfen wir, ob wir den seltenen Röhrenaal erwischt haben
+            if (currentEel && currentEel.state !== 'hiding') {
+                const centerX = currentEel.x + 12;
+                const centerY = currentEel.y + 30; // Obere Hälfte des Aals
+                const dx = clickX - centerX;
+                const dy = clickY - centerY;
+                if (Math.sqrt(dx * dx + dy * dy) < 40) {
+                    catchEel(currentEel);
+                    return; // Beende, wenn der Aal gefangen wurde
+                }
+            }
+
+            // 2. Ansonsten normale Fische/Muscheln/Seesterne prüfen
             for (let i = aquariumItems.length - 1; i >= 0; i--) {
                 const item = aquariumItems[i];
-                if (item.isAnimal || item.isClam) {
+                if (item.isAnimal || item.isClam || item.isStarfish) {
                     const centerX = item.x + item.width / 2;
                     const centerY = item.y + item.height / 2;
                     
@@ -404,6 +436,32 @@
             updateUI();
         }
 
+        function catchEel(eel) {
+            eel.element.remove();
+            currentEel = null;
+            
+            emptyInventoryText.style.display = 'none';
+
+            const bagDiv = document.createElement('div');
+            bagDiv.className = 'plastic-bag flex flex-col items-center justify-center shrink-0';
+            
+            const svgClone = eel.svgElement.cloneNode(true);
+            // Wir skalieren ihn etwas kleiner, damit er in die Tüte passt, und machen ihn aufrecht
+            svgClone.style.transform = 'scale(0.6)'; 
+            svgClone.style.transition = 'none';
+            bagDiv.appendChild(svgClone);
+
+            const priceTag = document.createElement('div');
+            priceTag.className = 'absolute bottom-1 bg-white px-2 py-0.5 rounded text-[10px] font-bold text-green-700 shadow-sm z-10';
+            priceTag.innerText = formatCurrency(15.00); // 15 Euro für den seltenen Fang!
+            bagDiv.appendChild(priceTag);
+
+            inventoryArea.appendChild(bagDiv);
+
+            currentInventoryValue += 15.00;
+            updateUI();
+        }
+
         // --- Hintergrund-Blasen ---
         function createBubbles() {
             for (let i = 0; i < 15; i++) {
@@ -423,6 +481,13 @@
         // --- Fischfutter (0,20€ Kosten) ---
         const foodBtn = document.getElementById('fish-food-btn');
         foodBtn.addEventListener('click', () => {
+            // Kescher deaktivieren bei Interaktion
+            if (isNetActive) {
+                isNetActive = false;
+                netBtn.classList.remove('bg-purple-200');
+                tank.classList.remove('cursor-net');
+            }
+
             if (budget >= 0.20) {
                 budget -= 0.20;
                 updateUI();
@@ -431,7 +496,6 @@
                     spawnFoodParticle();
                 }
             } else {
-                // Rotes Blinken, wenn kein Geld da ist
                 foodBtn.classList.add('bg-red-200', 'rounded', 'transition-colors', 'duration-300');
                 setTimeout(() => foodBtn.classList.remove('bg-red-200', 'rounded', 'transition-colors', 'duration-300'), 300);
             }
@@ -442,8 +506,7 @@
                 this.x = x;
                 this.y = y;
                 this.vy = 0;
-                this.gravity = 0.01 + Math.random() * 0.02; // Futter sinkt jetzt deutlich langsamer
-                // Bleibt im unteren Drittel des Wassers stehen (70% bis 85% der Höhe), statt im Sand zu versinken
+                this.gravity = 0.01 + Math.random() * 0.02; 
                 this.floorY = tank.clientHeight * 0.7 + Math.random() * (tank.clientHeight * 0.15);
                 this.isEaten = false;
 
@@ -457,12 +520,11 @@
                 if (this.isEaten) return;
                 if (this.y < this.floorY) {
                     this.vy += this.gravity;
-                    if (this.vy > 0.8) this.vy = 0.8; // Maximale Fallgeschwindigkeit verringert
+                    if (this.vy > 0.8) this.vy = 0.8; 
                     this.y += this.vy;
                     this.x += Math.sin(this.y * 0.05) * 0.5;
                     this.element.style.transform = `translate(${this.x}px, ${this.y}px)`;
                 } else {
-                    // Futter schwebt sanft auf der Stelle, sobald es seinen Haltepunkt im Wasser erreicht hat
                     this.x += Math.sin(Date.now() * 0.002 + this.y) * 0.1;
                     this.element.style.transform = `translate(${this.x}px, ${this.y}px)`;
                 }
@@ -480,12 +542,10 @@
             foodParticles.push(new FoodParticle(x, y));
         }
 
-        // --- Hilfsfunktion Währung ---
         function formatCurrency(value) {
             return value.toFixed(2).replace('.', ',') + ' €';
         }
 
-        // --- Verkauf-Logik ---
         sellBtn.addEventListener('click', () => {
             if (currentInventoryValue > 0) {
                 budget += currentInventoryValue;
@@ -505,7 +565,13 @@
         });
 
         function startDrag(e) {
-            if (isNetActive) return; 
+            // Kescher automatisch deaktivieren, sobald man auf Shop-Items klickt
+            if (isNetActive) {
+                isNetActive = false;
+                netBtn.classList.remove('bg-purple-200');
+                tank.classList.remove('cursor-net');
+            }
+            
             e.preventDefault();
             
             const originalElement = e.currentTarget;
@@ -567,6 +633,91 @@
             document.removeEventListener('pointerup', endDrag);
         }
 
+        // --- Röhrenaal (Garden Eel) Klasse ---
+        class GardenEel {
+            constructor() {
+                // Erscheint zufällig auf der X-Achse
+                this.x = 50 + Math.random() * (tank.clientWidth - 100);
+                this.y = tank.clientHeight; // Startet komplett unsichtbar unter dem Becken
+                this.targetY = tank.clientHeight - 85; // Soweit guckt er heraus
+                this.state = 'emerging';
+                this.stateTimer = 0;
+                
+                // Für die realistische Animation
+                this.currentAngle = 0;
+                this.targetAngle = 0;
+
+                this.element = document.createElement('div');
+                this.element.className = 'absolute';
+                this.element.style.zIndex = '5'; // Z-Index 5 sorgt dafür, dass er exakt hinter dem vordersten Sand auftaucht
+                this.element.style.transformOrigin = 'bottom center';
+                
+                this.element.innerHTML = `
+                    <svg width="24" height="100" viewBox="0 0 24 100" style="transform-origin: bottom center;">
+                        <!-- Körper -->
+                        <path d="M 6 100 L 6 20 Q 6 5 12 5 Q 18 5 18 20 L 18 100 Z" fill="#d1d5db" stroke="#9ca3af" stroke-width="2"/>
+                        <!-- Flecken -->
+                        <circle cx="12" cy="30" r="2" fill="#4b5563" />
+                        <circle cx="12" cy="50" r="2" fill="#4b5563" />
+                        <circle cx="12" cy="70" r="2" fill="#4b5563" />
+                        <!-- Kopf / Augen -->
+                        <circle cx="8" cy="12" r="2.5" fill="#000" />
+                        <circle cx="16" cy="12" r="2.5" fill="#000" />
+                        <!-- Mund -->
+                        <path d="M 10 18 Q 12 20 14 18" fill="none" stroke="#000" stroke-width="1.5"/>
+                    </svg>
+                `;
+                this.svgElement = this.element.querySelector('svg');
+                tank.appendChild(this.element);
+                this.updateTransform();
+            }
+
+            update() {
+                this.stateTimer++;
+
+                if (this.state === 'emerging') {
+                    this.y -= 1.5;
+                    if (this.y <= this.targetY) {
+                        this.y = this.targetY;
+                        this.state = 'looking';
+                        this.stateTimer = 0;
+                    }
+                } else if (this.state === 'looking') {
+                    // Geschmeidige "Knick"-Animation: Der Aal guckt in verschiedene Richtungen
+                    if (this.stateTimer < 60) this.targetAngle = 0;
+                    else if (this.stateTimer < 120) this.targetAngle = -35;
+                    else if (this.stateTimer < 180) this.targetAngle = 25;
+                    else if (this.stateTimer < 240) this.targetAngle = -15;
+                    else if (this.stateTimer < 300) this.targetAngle = 0;
+                    else {
+                        this.state = 'hiding';
+                    }
+
+                    // Weiche Interpolation zum Zielwinkel
+                    this.currentAngle += (this.targetAngle - this.currentAngle) * 0.1;
+
+                } else if (this.state === 'hiding') {
+                    this.y += 1.5; // Rückwärts im Sand verschwinden
+                    this.targetAngle = 0;
+                    this.currentAngle += (this.targetAngle - this.currentAngle) * 0.1;
+                    
+                    if (this.y >= tank.clientHeight) {
+                        this.element.remove();
+                        currentEel = null; // Zerstören, damit wieder ein neuer spawnen kann
+                        return; 
+                    }
+                }
+
+                this.updateTransform();
+            }
+
+            updateTransform() {
+                this.element.style.transform = `translate(${this.x}px, ${this.y}px)`;
+                this.svgElement.style.transform = `rotate(${this.currentAngle}deg)`;
+            }
+        }
+
+
         // --- Klassen für Objekte im Aquarium ---
         class AquariumItem {
             constructor(type, startX, startY, svgContent, basePrice) {
@@ -581,15 +732,15 @@
                 
                 this.isAnimal = (['clownfish', 'bluetang', 'goldfish', 'angelfish', 'shrimp'].includes(type));
                 this.isClam = (type === 'clam');
-                this.isPlant = (['plant', 'redplant', 'seagrass'].includes(type)); // Neu: Pflanzen erkennen
+                this.isStarfish = (type === 'starfish');
+                this.isPlant = (['plant', 'redplant', 'seagrass'].includes(type)); 
                 
                 this.element = document.createElement('div');
                 this.element.className = 'tank-item';
                 this.element.innerHTML = svgContent;
                 this.svgElement = this.element.querySelector('svg');
                 
-                // Pflanzen sollen vom Boden aus nach oben wachsen
-                if (this.isPlant) {
+                if (this.isPlant || this.isStarfish) {
                     this.svgElement.style.transformOrigin = "bottom center";
                 }
                 
@@ -604,7 +755,6 @@
                     if (type === 'shrimp') this.baseSpeed *= 0.5;
                     
                     this.speed = this.baseSpeed;
-                    // Startrichtung direkt festlegen
                     this.vx = (Math.random() > 0.5 ? 1 : -1) * this.speed;
                     this.vy = 0;
                     this.targetedFood = null;
@@ -613,13 +763,12 @@
                     this.vy = 0;
                     this.gravity = 0.2;
                     this.floorY = tank.clientHeight - this.height - (Math.random() * 10); 
-                    if (this.isClam) this.floorY += 5;
+                    if (this.isClam || this.isStarfish) this.floorY += 5;
 
-                    // Maximale Wuchshöhe für Pflanzen berechnen (max. 2/3 des Aquariums)
                     if (this.isPlant) {
                         const targetHeight = tank.clientHeight * 0.66;
                         this.maxSizeMultiplier = targetHeight / this.height;
-                        if (this.maxSizeMultiplier > 4) this.maxSizeMultiplier = 4; // Absolutes Limit zur Sicherheit
+                        if (this.maxSizeMultiplier > 4) this.maxSizeMultiplier = 4; 
                     }
                 }
 
@@ -630,7 +779,6 @@
                 const marginX = this.width;
                 const marginY = this.height;
                 
-                // Ziel-Koordinaten sicher innerhalb des Beckens wählen
                 const minX = marginX;
                 const maxX = tank.clientWidth - marginX * 2;
                 this.targetX = minX + Math.random() * (maxX - minX);
@@ -638,11 +786,9 @@
                 if (this.type === 'shrimp') {
                     this.targetY = tank.clientHeight - 60 - Math.random() * 40;
                 } else {
-                    // Flacheres Schwimmen: Zielhöhe nah an aktueller Höhe wählen
                     let yDelta = (Math.random() * 100) - 50;
                     this.targetY = this.y + yDelta;
                     
-                    // Verhindern, dass Ziele außerhalb des Beckens liegen
                     const minY = marginY + 20;
                     const maxY = tank.clientHeight - marginY - 60;
                     if (this.targetY < minY) this.targetY = minY + Math.random() * 30;
@@ -651,20 +797,19 @@
             }
 
             update() {
-                if (this.isAnimal || this.isClam || this.isPlant) {
+                if (this.isAnimal || this.isClam || this.isPlant || this.isStarfish) {
                     this.framesAlive++;
                     if (this.framesAlive % 600 === 0) {
-                        if (this.isAnimal || this.isClam) {
-                            this.currentPrice += 0.05;
+                        if (this.isAnimal || this.isClam || this.isStarfish) {
+                            this.currentPrice += 0.05; // Wertzuwachs für Tiere
                         } else if (this.isPlant) {
                             this.currentPrice += 0.02; // Auch Pflanzen steigen leicht im Wert
                         }
 
-                        if (this.isClam && this.sizeMultiplier < 2.0) {
+                        if ((this.isClam || this.isStarfish) && this.sizeMultiplier < 2.0) {
                             this.sizeMultiplier += 0.1;
                         }
 
-                        // Pflanzen wachsen dynamisch bis zur Maximalgröße
                         if (this.isPlant && this.sizeMultiplier < this.maxSizeMultiplier) {
                             this.sizeMultiplier += 0.05;
                             this.svgElement.style.transform = `scale(${this.sizeMultiplier})`;
@@ -706,7 +851,6 @@
                     const dy = this.targetY - this.y;
                     const distance = Math.sqrt(dx * dx + dy * dy);
 
-                    // Fang-Radius leicht erhöht, damit sie das Futter besser schnappen
                     if (distance < 25) {
                         if (this.targetedFood) {
                             this.targetedFood.eat();
@@ -719,25 +863,20 @@
                         this.pickNewTarget();
                     } else {
                         if (this.targetedFood && distance < 60) {
-                            // "Zuschnappen": Wenn das Futter sehr nah ist, starre Verfolgung ohne weiche Kurven (verhindert Kreisen!)
                             this.vx = (dx / distance) * this.speed;
                             this.vy = (dy / distance) * this.speed;
                         } else {
-                            // Sehr viel agilere Steuerung für enge Radien
                             let desiredVx = (dx / distance) * this.speed;
                             let desiredVy = (dy / distance) * this.speed;
 
-                            // Schwimmen abflachen, wenn kein Futter gejagt wird
                             if (!this.targetedFood) {
                                 desiredVy *= 0.2;
                             }
 
-                            // Deutlich höhere Lenkgeschwindigkeit für schnelle Wendemanöver
                             const turnSpeed = this.targetedFood ? 0.3 : 0.15; 
                             this.vx += (desiredVx - this.vx) * turnSpeed;
                             this.vy += (desiredVy - this.vy) * turnSpeed;
 
-                            // Geschwindigkeit normalisieren
                             const currentV = Math.sqrt(this.vx * this.vx + this.vy * this.vy);
                             if (currentV > 0) {
                                 this.vx = (this.vx / currentV) * this.speed;
@@ -749,8 +888,7 @@
                         this.y += this.vy;
                     }
 
-                    // --- ABSOLUTE GRENZEN (Boundaries) ---
-                    // Verhindert, dass Fische das Aquarium verlassen
+                    // Boundaries
                     const padX = (this.width * this.sizeMultiplier) / 2;
                     const padY = (this.height * this.sizeMultiplier) / 2;
                     const centerX = this.x + this.width / 2;
@@ -758,27 +896,24 @@
                     
                     let hitWall = false;
 
-                    // Links / Rechts
                     if (centerX - padX < 0) {
                         this.x = padX - this.width / 2;
-                        this.vx = Math.abs(this.vx); // Abprallen nach rechts
+                        this.vx = Math.abs(this.vx); 
                         hitWall = true;
                     } else if (centerX + padX > tank.clientWidth) {
                         this.x = tank.clientWidth - padX - this.width / 2;
-                        this.vx = -Math.abs(this.vx); // Abprallen nach links
+                        this.vx = -Math.abs(this.vx); 
                         hitWall = true;
                     }
                     
-                    // Oben (Wasseroberfläche)
                     if (centerY - padY < 20) {
                         this.y = 20 + padY - this.height / 2;
                         this.vy = Math.abs(this.vy);
                         hitWall = true;
                     }
                     
-                    // Unten (Sand)
                     let maxBottom = tank.clientHeight - 40; 
-                    if (this.type === 'shrimp') maxBottom = tank.clientHeight - 5; // Garnele darf tiefer
+                    if (this.type === 'shrimp') maxBottom = tank.clientHeight - 5; 
                     
                     if (centerY + padY > maxBottom) {
                         this.y = maxBottom - padY - this.height / 2;
@@ -786,21 +921,19 @@
                         hitWall = true;
                     }
 
-                    // Wenn eine Wand berührt wurde, sofort neues Ziel im Becken suchen
                     if (hitWall && !this.targetedFood) {
                         this.pickNewTarget();
                     }
 
-                    // Ausrichtung & Drehung ohne CSS Animation (verhindert "strichartiges" Quetschen)
                     let scaleX = 1;
                     let angle = 0;
                     const tiltFactor = 15;
 
                     if (this.vx > 0) {
-                        scaleX = -1; // Blick nach rechts
+                        scaleX = -1; 
                         angle = (this.vy / this.speed) * tiltFactor * -1; 
                     } else {
-                        scaleX = 1;  // Blick nach links
+                        scaleX = 1;  
                         angle = (this.vy / this.speed) * tiltFactor;
                     }
 
@@ -817,6 +950,7 @@
                             this.vy = 0;
                         }
                         this.element.style.transform = `translate(${this.x}px, ${this.y}px)`;
+                        // Wir verwenden hier das scale ohne Drehung (außer es ist ein Knick wie beim Aal, aber Aal ist eine eigene Klasse)
                         this.svgElement.style.transform = `scale(${this.sizeMultiplier})`;
                     }
                 }
@@ -832,6 +966,15 @@
         }
 
         function gameLoop() {
+            // Aal-Spawner (selten)
+            if (!currentEel && Math.random() < 0.0015) { 
+                currentEel = new GardenEel();
+            }
+
+            if (currentEel) {
+                currentEel.update();
+            }
+
             for (let i = aquariumItems.length - 1; i >= 0; i--) {
                 aquariumItems[i].update();
             }
