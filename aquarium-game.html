@@ -127,6 +127,12 @@
     </header>
 
     <main id="aquarium-tank" class="flex-grow w-full border-b-8 border-yellow-700/50">
+        <!-- NEU: Event Banner -->
+        <div id="event-banner" class="absolute top-4 left-1/2 transform -translate-x-1/2 bg-red-500 text-white px-6 py-2 rounded-full font-bold shadow-lg z-50 hidden items-center gap-2 transition-all duration-500">
+            <span>🎉 Event: Bunte Clownfische stark reduziert!</span>
+        </div>
+
+        <!-- Hinterer Sand (Tiefe) -->
         <div class="absolute bottom-0 w-full h-16 bg-yellow-600/80 rounded-t-3xl blur-[2px] z-0"></div>
         <div class="absolute bottom-0 w-full h-12 bg-yellow-500/90 rounded-t-xl z-10" style="clip-path: polygon(0% 20%, 20% 0%, 40% 15%, 60% 0%, 80% 20%, 100% 5%, 100% 100%, 0% 100%);"></div>
     </main>
@@ -262,20 +268,17 @@
             
             <div class="flex flex-col items-center">
                 <div class="draggable transition-transform hover:scale-110 h-[50px] flex items-center" data-type="flowerplant" data-price="3.00">
-                    <!-- Angepasstes, unterwassertaugliches Design für die Blütenpflanze -->
                     <svg width="40" height="70" viewBox="0 0 60 100" xmlns="http://www.w3.org/2000/svg">
                         <path d="M 30 100 Q 35 60 30 20" fill="none" stroke="#166534" stroke-width="5" stroke-linecap="round"/>
                         <path d="M 30 90 Q 50 80 55 50 Q 35 60 30 90" fill="#22c55e"/>
                         <path d="M 30 75 Q 10 65 5 35 Q 25 45 30 75" fill="#4ade80"/>
-                        <g class="flower-bud" style="transform-origin: 30px 20px; transform: scale(0.8);">
-                            <g transform="translate(18, 8)">
-                                <circle cx="12" cy="12" r="4" fill="#facc15"/>
-                                <path d="M12 2 C15 5 15 8 12 8 C9 8 9 5 12 2 Z" fill="#f472b6" transform="rotate(0 12 12)"/>
-                                <path d="M12 2 C15 5 15 8 12 8 C9 8 9 5 12 2 Z" fill="#f472b6" transform="rotate(72 12 12)"/>
-                                <path d="M12 2 C15 5 15 8 12 8 C9 8 9 5 12 2 Z" fill="#f472b6" transform="rotate(144 12 12)"/>
-                                <path d="M12 2 C15 5 15 8 12 8 C9 8 9 5 12 2 Z" fill="#f472b6" transform="rotate(216 12 12)"/>
-                                <path d="M12 2 C15 5 15 8 12 8 C9 8 9 5 12 2 Z" fill="#f472b6" transform="rotate(288 12 12)"/>
-                            </g>
+                        <g class="flower-bud" style="transform-origin: 30px 20px; transform: scale(0);">
+                            <circle cx="30" cy="20" r="8" fill="#facc15"/>
+                            <path d="M30 4 C35 9 35 14 30 14 C25 14 25 9 30 4 Z" fill="#f472b6" transform="rotate(0 30 20)"/>
+                            <path d="M30 4 C35 9 35 14 30 14 C25 14 25 9 30 4 Z" fill="#f472b6" transform="rotate(72 30 20)"/>
+                            <path d="M30 4 C35 9 35 14 30 14 C25 14 25 9 30 4 Z" fill="#f472b6" transform="rotate(144 30 20)"/>
+                            <path d="M30 4 C35 9 35 14 30 14 C25 14 25 9 30 4 Z" fill="#f472b6" transform="rotate(216 30 20)"/>
+                            <path d="M30 4 C35 9 35 14 30 14 C25 14 25 9 30 4 Z" fill="#f472b6" transform="rotate(288 30 20)"/>
                         </g>
                     </svg>
                 </div>
@@ -346,6 +349,13 @@
         </div>
     </footer>
 
+    <!-- NEU: Entwicklerabschnitt -->
+    <div id="dev-panel" class="bg-gray-800 text-gray-300 p-2 text-xs flex gap-4 items-center z-30 shadow-inner overflow-x-auto shrink-0">
+        <span class="font-bold uppercase tracking-wider text-gray-500">Dev Tools:</span>
+        <button id="dev-btn-clownfish" class="bg-gray-700 hover:bg-gray-500 text-white px-3 py-1 rounded border border-gray-600 transition-colors">Clownfisch Event</button>
+        <button id="dev-btn-eel" class="bg-gray-700 hover:bg-gray-500 text-white px-3 py-1 rounded border border-gray-600 transition-colors">Spawne Röhrenaal</button>
+    </div>
+
     <script>
         const tank = document.getElementById('aquarium-tank');
         const draggables = document.querySelectorAll('.draggable');
@@ -354,6 +364,7 @@
         const budgetDisplay = document.getElementById('budget-display');
         const inventoryValueDisplay = document.getElementById('inventory-value-display');
         const sellBtn = document.getElementById('sell-btn');
+        const netBtn = document.getElementById('net-btn'); // Fehler behoben: netBtn war nicht definiert
         
         const aquariumItems = [];
         const foodParticles = [];
@@ -367,13 +378,85 @@
         let budget = 20.00;
         let currentInventoryValue = 0.00;
 
-        // Hilfsfunktion: Preis auslesen
+        // --- Event Logik ---
+        let clownfishEventTimeout;
+        let nextClownfishEventTimeout;
+        const clownfishOriginalPrice = 2.00;
+        const clownfishDiscountPrice = 1.00;
+        const clownfishColors = ['#ef4444', '#3b82f6', '#10b981', '#a855f7', '#ec4899', '#14b8a6'];
+        
+        // Element auslesen (kann null sein, bevor das DOM komplett geladen ist, daher holen wir es einmalig sicher)
+        const clownfishShopElement = document.querySelector('.draggable[data-type="clownfish"]');
+        if (clownfishShopElement) {
+            clownfishShopElement.dataset.currentColor = '#ff7b00';
+        }
+
+        function startClownfishEvent() {
+            if (!clownfishShopElement) return;
+            if (clownfishEventTimeout) clearTimeout(clownfishEventTimeout);
+
+            const banner = document.getElementById('event-banner');
+            if (banner) {
+                banner.classList.remove('hidden');
+                banner.classList.add('flex');
+            }
+
+            const randomColor = clownfishColors[Math.floor(Math.random() * clownfishColors.length)];
+
+            clownfishShopElement.dataset.price = clownfishDiscountPrice;
+            clownfishShopElement.nextElementSibling.innerText = formatCurrency(clownfishDiscountPrice) + ' (Sale!)';
+            clownfishShopElement.nextElementSibling.classList.add('text-red-600');
+
+            const currentColor = clownfishShopElement.dataset.currentColor;
+            const svgs = clownfishShopElement.querySelectorAll(`path[fill="${currentColor}"], ellipse[fill="${currentColor}"]`);
+            svgs.forEach(el => el.setAttribute('fill', randomColor));
+            clownfishShopElement.dataset.currentColor = randomColor;
+
+            clownfishEventTimeout = setTimeout(endClownfishEvent, 30000); 
+        }
+
+        function endClownfishEvent() {
+            if (!clownfishShopElement) return;
+            const banner = document.getElementById('event-banner');
+            if (banner) {
+                banner.classList.add('hidden');
+                banner.classList.remove('flex');
+            }
+
+            clownfishShopElement.dataset.price = clownfishOriginalPrice;
+            clownfishShopElement.nextElementSibling.innerText = formatCurrency(clownfishOriginalPrice);
+            clownfishShopElement.nextElementSibling.classList.remove('text-red-600');
+
+            const currentColor = clownfishShopElement.dataset.currentColor;
+            const svgs = clownfishShopElement.querySelectorAll(`path[fill="${currentColor}"], ellipse[fill="${currentColor}"]`);
+            svgs.forEach(el => el.setAttribute('fill', '#ff7b00'));
+            clownfishShopElement.dataset.currentColor = '#ff7b00';
+
+            scheduleNextClownfishEvent();
+        }
+
+        function scheduleNextClownfishEvent() {
+            if (nextClownfishEventTimeout) clearTimeout(nextClownfishEventTimeout);
+            const delay = 120000 + Math.random() * 120000;
+            nextClownfishEventTimeout = setTimeout(startClownfishEvent, delay);
+        }
+
+        // --- Dev Panel Listener ---
+        const devBtnClown = document.getElementById('dev-btn-clownfish');
+        const devBtnEel = document.getElementById('dev-btn-eel');
+        if (devBtnClown) devBtnClown.addEventListener('click', startClownfishEvent);
+        if (devBtnEel) devBtnEel.addEventListener('click', () => {
+            if (!currentEel) currentEel = new GardenEel();
+        });
+
+        // Event-Zyklus initial starten
+        scheduleNextClownfishEvent();
+
         function getBasePrice(type) {
             const el = document.querySelector(`.draggable[data-type="${type}"]`);
             return el ? parseFloat(el.dataset.price) : 1.0;
         }
 
-        // Hilfsfunktion: SVG Inhalt auslesen
         function getSvgContent(type) {
             const el = document.querySelector(`.draggable[data-type="${type}"]`);
             return el ? el.querySelector('svg').outerHTML : '';
@@ -390,7 +473,6 @@
         }
 
         let isNetActive = false;
-        const netBtn = document.getElementById('net-btn');
         
         netBtn.addEventListener('click', () => {
             isNetActive = !isNetActive;
@@ -730,7 +812,6 @@
             }
         }
 
-
         class AquariumItem {
             constructor(type, startX, startY, svgContent, basePrice) {
                 this.type = type;
@@ -743,7 +824,7 @@
                 this.framesAlive = 0;
                 
                 this.lastGrowthTime = 0; 
-                this.lastBreedTime = Date.now(); // Für den Cooldown der Paarung
+                this.lastBreedTime = Date.now(); 
                 
                 this.isAnimal = (['clownfish', 'bluetang', 'goldfish', 'angelfish', 'shrimp'].includes(type));
                 this.isClam = (type === 'clam');
@@ -752,7 +833,6 @@
                 this.isBlossom = (type === 'blossom');
                 
                 if (this.type === 'flowerplant') {
-                    // Timer startet beim Einsetzen
                     this.lastBloomTime = Date.now();
                 }
 
@@ -828,12 +908,10 @@
             update() {
                 if (this.isAnimal || this.isClam || this.isPlant || this.isStarfish) {
                     this.framesAlive++;
-                    // ~30% schnelleres passives Wachstum: statt 600 Frames jetzt alle 450 Frames
                     if (this.framesAlive % 450 === 0) {
                         if (this.isAnimal || this.isClam || this.isStarfish) {
                             this.currentPrice += 0.05; 
                             
-                            // Babys wachsen passiv (zeitlich) extrem viel schneller
                             if (this.isAnimal && this.sizeMultiplier < 1.0) {
                                 this.sizeMultiplier += 0.03;
                                 this.currentPrice += 0.10;
@@ -853,7 +931,6 @@
                     }
                 }
 
-                // Blütenpflanze wächst sichtbar über 2 Minuten (120000ms) und löst sich dann
                 if (this.isPlant && this.type === 'flowerplant') {
                     const now = Date.now();
                     const bloomDuration = 120000;
@@ -919,14 +996,11 @@
                             this.targetedFood = null;
                             
                             const now = Date.now();
-                            // ~30% reduzierter Cooldown (7000ms statt 10000ms)
                             if (this.sizeMultiplier < 2.0 && (now - this.lastGrowthTime > 7000)) { 
                                 if (this.sizeMultiplier < 1.0) {
-                                    // Babys wachsen durch Futter sehr schnell
                                     this.sizeMultiplier += 0.1;
                                     this.currentPrice += 0.20;
                                 } else {
-                                    // Normale Fische wachsen ~30% schneller (0.015 statt 0.01)
                                     this.sizeMultiplier += 0.015;
                                     this.currentPrice += 0.065; 
                                 }
@@ -1043,7 +1117,7 @@
         function spawnItem(type, x, y, svgContent, price) {
             const item = new AquariumItem(type, x, y, svgContent, price);
             aquariumItems.push(item);
-            return item; // Gebe Element zurück, damit es manipuliert werden kann
+            return item; 
         }
 
         function showBabyAnimation(x, y) {
@@ -1066,32 +1140,28 @@
                     let itemB = aquariumItems[j];
                     if (!itemB.isAnimal) continue;
 
-                    // Wenn zwei gleiche Arten sich treffen
                     if (itemA.type === itemB.type) {
-                        // Cooldown von 60 Sekunden für beide
                         if (now - itemA.lastBreedTime > 60000 && now - itemB.lastBreedTime > 60000) {
                             const dx = itemA.x - itemB.x;
                             const dy = itemA.y - itemB.y;
                             const dist = Math.sqrt(dx * dx + dy * dy);
 
                             if (dist < 40) {
-                                // Seltene Chance bei Berührung
-                                if (Math.random() < 0.01) {
-                                    itemA.lastBreedTime = now;
-                                    itemB.lastBreedTime = now;
-                                    
-                                    const svg = getSvgContent(itemA.type);
-                                    const price = getBasePrice(itemA.type);
-                                    
-                                    const babyX = (itemA.x + itemB.x) / 2;
-                                    const babyY = (itemA.y + itemB.y) / 2;
-                                    
-                                    const baby = spawnItem(itemA.type, babyX, babyY, svg, price);
-                                    
-                                    // Eigenschaften des Babys
-                                    baby.sizeMultiplier = 0.4;
-                                    baby.currentPrice = price * 0.4;
-                                    baby.lastBreedTime = now; // Damit das Baby nicht sofort paart
+                            if (Math.random() < 0.01) {
+                                itemA.lastBreedTime = now;
+                                itemB.lastBreedTime = now;
+                                
+                                const svg = itemA.element.innerHTML;
+                                const price = getBasePrice(itemA.type);
+                                
+                                const babyX = (itemA.x + itemB.x) / 2;
+                                const babyY = (itemA.y + itemB.y) / 2;
+                                
+                                const baby = spawnItem(itemA.type, babyX, babyY, svg, price);
+                                
+                                baby.sizeMultiplier = 0.4;
+                                baby.currentPrice = price * 0.4;
+                                    baby.lastBreedTime = now; 
                                     
                                     showBabyAnimation(babyX, babyY);
                                 }
@@ -1122,7 +1192,7 @@
                 }
             }
             
-            checkBreeding(); // Überprüfen ob Fische ein Baby zeugen
+            checkBreeding(); 
             
             requestAnimationFrame(gameLoop);
         }
