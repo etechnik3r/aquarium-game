@@ -21,7 +21,6 @@
             box-shadow: inset 0 0 20px rgba(0,0,0,0.3);
         }
 
-        /* Cursor für den Kescher-Modus */
         .cursor-net {
             cursor: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='32' height='32' viewBox='0 0 24 24'%3E%3Cpath fill='%231f2937' d='M12 2a10 10 0 0 0-9.95 9h-1a1 1 0 0 0 0 2h1a10 10 0 0 0 19.9 0h1a1 1 0 0 0 0-2h-1A10 10 0 0 0 12 2zm0 18a8 8 0 0 1-7.93-7h15.86A8 8 0 0 1 12 20zm0-16a8 8 0 0 1 7.93 7H4.07A8 8 0 0 1 12 4z'/%3E%3C/svg%3E") 16 16, crosshair !important;
         }
@@ -32,7 +31,7 @@
             background: rgba(255, 255, 255, 0.3);
             border-radius: 50%;
             animation: rise linear infinite;
-            z-index: 1; /* Blasen im Hintergrund */
+            z-index: 1;
         }
 
         @keyframes rise {
@@ -41,7 +40,21 @@
             100% { transform: translateY(-100vh) scale(1.5); opacity: 0; }
         }
 
-        /* Normale Fische und Pflanzen schwimmen VOR dem hinteren Sand, aber manche können hinter den vorderen tauchen */
+        /* Animation für das Fisch-Baby */
+        @keyframes heartFloat {
+            0% { transform: translateY(0) scale(0.5); opacity: 1; }
+            50% { transform: translateY(-20px) scale(1.2); opacity: 1; }
+            100% { transform: translateY(-40px) scale(1); opacity: 0; }
+        }
+        
+        .baby-heart {
+            position: absolute;
+            font-size: 24px;
+            animation: heartFloat 2s ease-out forwards;
+            pointer-events: none;
+            z-index: 20;
+        }
+
         .tank-item {
             position: absolute;
             transform-origin: center center;
@@ -62,7 +75,6 @@
             z-index: 15;
         }
 
-        /* Styling für den Plastikbeutel der gefangenen Fische */
         .plastic-bag {
             position: relative;
             background: rgba(224, 242, 254, 0.5);
@@ -114,18 +126,11 @@
         </div>
     </header>
 
-    <!-- Hauptbereich: Das Aquarium -->
     <main id="aquarium-tank" class="flex-grow w-full border-b-8 border-yellow-700/50">
-        <!-- Hinterer Sand (Tiefe) -->
         <div class="absolute bottom-0 w-full h-16 bg-yellow-600/80 rounded-t-3xl blur-[2px] z-0"></div>
-        
-        <!-- Aal-Layer ist z-index: 5 (automatisch durch JS) -->
-
-        <!-- Vorderer Sand (verdeckt den Aal beim Auftauchen) -->
         <div class="absolute bottom-0 w-full h-12 bg-yellow-500/90 rounded-t-xl z-10" style="clip-path: polygon(0% 20%, 20% 0%, 40% 15%, 60% 0%, 80% 20%, 100% 5%, 100% 100%, 0% 100%);"></div>
     </main>
 
-    <!-- Inventarbereich für gefangene Fische -->
     <div class="bg-blue-50/80 h-32 border-b-2 border-gray-300 p-2 flex gap-4 shadow-inner relative z-20">
         <div id="inventory-area" class="flex-grow flex gap-4 overflow-x-auto items-center h-full pr-40">
             <div id="empty-inventory-text" class="w-full text-center text-gray-400 italic text-sm">
@@ -133,7 +138,6 @@
             </div>
         </div>
         
-        <!-- Verkaufsbereich rechts im Inventar -->
         <div class="absolute right-2 top-2 bottom-2 w-36 bg-white border-2 border-green-200 rounded-lg shadow flex flex-col justify-center items-center p-2 z-10">
             <span class="text-xs text-gray-500 font-bold">Gesamtwert:</span>
             <span id="inventory-value-display" class="text-lg font-bold text-green-700 mb-2">0,00 €</span>
@@ -143,12 +147,9 @@
         </div>
     </div>
 
-    <!-- Werkzeugleiste / Auswahlbereich -->
     <footer class="bg-white p-3 shadow-[0_-4px_6px_-1px_rgba(0,0,0,0.1)] z-20 flex gap-6 items-start overflow-x-auto">
         
-        <!-- Werkzeuge -->
         <div class="flex gap-4 border-r-2 border-gray-200 pr-6 shrink-0 items-center">
-            <!-- Futterdose -->
             <div id="fish-food-btn" class="cursor-pointer transition-transform hover:scale-110 flex flex-col items-center">
                 <svg width="40" height="50" viewBox="0 0 40 50" xmlns="http://www.w3.org/2000/svg">
                     <rect x="5" y="10" width="30" height="40" fill="#facc15" stroke="#ca8a04" stroke-width="2" rx="4"/>
@@ -157,7 +158,6 @@
                 <span class="text-xs text-yellow-700 mt-1 font-bold text-center">Füttern<br>(0,20 €)</span>
             </div>
 
-            <!-- Kescher (Toggle) -->
             <div id="net-btn" class="cursor-pointer transition-transform hover:scale-110 flex flex-col items-center p-2 rounded-lg">
                 <svg width="40" height="50" viewBox="0 0 50 60" xmlns="http://www.w3.org/2000/svg">
                     <path d="M 25 20 C 10 20, 10 40, 25 40 C 40 40, 40 20, 25 20 Z" fill="none" stroke="#4b5563" stroke-width="4"/>
@@ -168,7 +168,6 @@
             </div>
         </div>
 
-        <!-- Tiere -->
         <div class="flex gap-4 shrink-0">
             <div class="flex flex-col items-center">
                 <div class="draggable transition-transform hover:scale-110 h-[50px] flex items-center" data-type="clownfish" data-price="2.00">
@@ -247,7 +246,6 @@
                 <span class="text-xs font-bold text-gray-700">12,00 €</span>
             </div>
 
-            <!-- NEU: Seestern -->
             <div class="flex flex-col items-center">
                 <div class="draggable transition-transform hover:scale-110 h-[50px] flex items-center" data-type="starfish" data-price="4.50">
                     <svg width="40" height="40" viewBox="0 0 50 50" xmlns="http://www.w3.org/2000/svg">
@@ -260,8 +258,30 @@
             </div>
         </div>
 
-        <!-- Pflanzen & Steine -->
         <div class="flex gap-4 shrink-0 border-l-2 border-gray-200 pl-4">
+            
+            <div class="flex flex-col items-center">
+                <div class="draggable transition-transform hover:scale-110 h-[50px] flex items-center" data-type="flowerplant" data-price="3.00">
+                    <!-- Angepasstes, unterwassertaugliches Design für die Blütenpflanze -->
+                    <svg width="40" height="70" viewBox="0 0 60 100" xmlns="http://www.w3.org/2000/svg">
+                        <path d="M 30 100 Q 35 60 30 20" fill="none" stroke="#166534" stroke-width="5" stroke-linecap="round"/>
+                        <path d="M 30 90 Q 50 80 55 50 Q 35 60 30 90" fill="#22c55e"/>
+                        <path d="M 30 75 Q 10 65 5 35 Q 25 45 30 75" fill="#4ade80"/>
+                        <g class="flower-bud" style="transform-origin: 30px 20px; transform: scale(0.8);">
+                            <g transform="translate(18, 8)">
+                                <circle cx="12" cy="12" r="4" fill="#facc15"/>
+                                <path d="M12 2 C15 5 15 8 12 8 C9 8 9 5 12 2 Z" fill="#f472b6" transform="rotate(0 12 12)"/>
+                                <path d="M12 2 C15 5 15 8 12 8 C9 8 9 5 12 2 Z" fill="#f472b6" transform="rotate(72 12 12)"/>
+                                <path d="M12 2 C15 5 15 8 12 8 C9 8 9 5 12 2 Z" fill="#f472b6" transform="rotate(144 12 12)"/>
+                                <path d="M12 2 C15 5 15 8 12 8 C9 8 9 5 12 2 Z" fill="#f472b6" transform="rotate(216 12 12)"/>
+                                <path d="M12 2 C15 5 15 8 12 8 C9 8 9 5 12 2 Z" fill="#f472b6" transform="rotate(288 12 12)"/>
+                            </g>
+                        </g>
+                    </svg>
+                </div>
+                <span class="text-xs font-bold text-gray-700">3,00 €</span>
+            </div>
+
             <div class="flex flex-col items-center">
                 <div class="draggable transition-transform hover:scale-110 h-[50px] flex items-center" data-type="plant" data-price="2.00">
                     <svg width="25" height="50" viewBox="0 0 40 100" xmlns="http://www.w3.org/2000/svg">
@@ -337,7 +357,7 @@
         
         const aquariumItems = [];
         const foodParticles = [];
-        let currentEel = null; // Speichert den aktiven Röhrenaal
+        let currentEel = null; 
         
         let draggedElement = null;
         let currentType = null;
@@ -346,6 +366,18 @@
 
         let budget = 20.00;
         let currentInventoryValue = 0.00;
+
+        // Hilfsfunktion: Preis auslesen
+        function getBasePrice(type) {
+            const el = document.querySelector(`.draggable[data-type="${type}"]`);
+            return el ? parseFloat(el.dataset.price) : 1.0;
+        }
+
+        // Hilfsfunktion: SVG Inhalt auslesen
+        function getSvgContent(type) {
+            const el = document.querySelector(`.draggable[data-type="${type}"]`);
+            return el ? el.querySelector('svg').outerHTML : '';
+        }
 
         function updateUI() {
             budgetDisplay.innerText = formatCurrency(budget);
@@ -357,7 +389,6 @@
             }
         }
 
-        // --- Kescher-Status ---
         let isNetActive = false;
         const netBtn = document.getElementById('net-btn');
         
@@ -372,7 +403,6 @@
             }
         });
 
-        // Kescher: Klick auf das Aquarium
         tank.addEventListener('click', (e) => {
             if (!isNetActive) return;
 
@@ -380,22 +410,20 @@
             const clickX = e.clientX - rect.left;
             const clickY = e.clientY - rect.top;
 
-            // 1. Zuerst prüfen wir, ob wir den seltenen Röhrenaal erwischt haben
             if (currentEel && currentEel.state !== 'hiding') {
                 const centerX = currentEel.x + 12;
-                const centerY = currentEel.y + 30; // Obere Hälfte des Aals
+                const centerY = currentEel.y + 30; 
                 const dx = clickX - centerX;
                 const dy = clickY - centerY;
                 if (Math.sqrt(dx * dx + dy * dy) < 40) {
                     catchEel(currentEel);
-                    return; // Beende, wenn der Aal gefangen wurde
+                    return; 
                 }
             }
 
-            // 2. Ansonsten normale Fische/Muscheln/Seesterne prüfen
             for (let i = aquariumItems.length - 1; i >= 0; i--) {
                 const item = aquariumItems[i];
-                if (item.isAnimal || item.isClam || item.isStarfish) {
+                if (item.isAnimal || item.isClam || item.isStarfish || item.isBlossom) {
                     const centerX = item.x + item.width / 2;
                     const centerY = item.y + item.height / 2;
                     
@@ -446,23 +474,21 @@
             bagDiv.className = 'plastic-bag flex flex-col items-center justify-center shrink-0';
             
             const svgClone = eel.svgElement.cloneNode(true);
-            // Wir skalieren ihn etwas kleiner, damit er in die Tüte passt, und machen ihn aufrecht
             svgClone.style.transform = 'scale(0.6)'; 
             svgClone.style.transition = 'none';
             bagDiv.appendChild(svgClone);
 
             const priceTag = document.createElement('div');
             priceTag.className = 'absolute bottom-1 bg-white px-2 py-0.5 rounded text-[10px] font-bold text-green-700 shadow-sm z-10';
-            priceTag.innerText = formatCurrency(15.00); // 15 Euro für den seltenen Fang!
+            priceTag.innerText = formatCurrency(1.00); 
             bagDiv.appendChild(priceTag);
 
             inventoryArea.appendChild(bagDiv);
 
-            currentInventoryValue += 15.00;
+            currentInventoryValue += 1.00;
             updateUI();
         }
 
-        // --- Hintergrund-Blasen ---
         function createBubbles() {
             for (let i = 0; i < 15; i++) {
                 const bubble = document.createElement('div');
@@ -478,10 +504,8 @@
         }
         createBubbles();
 
-        // --- Fischfutter (0,20€ Kosten) ---
         const foodBtn = document.getElementById('fish-food-btn');
         foodBtn.addEventListener('click', () => {
-            // Kescher deaktivieren bei Interaktion
             if (isNetActive) {
                 isNetActive = false;
                 netBtn.classList.remove('bg-purple-200');
@@ -559,13 +583,11 @@
             }
         });
 
-        // --- Drag & Drop ---
         draggables.forEach(item => {
             item.addEventListener('pointerdown', startDrag);
         });
 
         function startDrag(e) {
-            // Kescher automatisch deaktivieren, sobald man auf Shop-Items klickt
             if (isNetActive) {
                 isNetActive = false;
                 netBtn.classList.remove('bg-purple-200');
@@ -633,37 +655,30 @@
             document.removeEventListener('pointerup', endDrag);
         }
 
-        // --- Röhrenaal (Garden Eel) Klasse ---
         class GardenEel {
             constructor() {
-                // Erscheint zufällig auf der X-Achse
                 this.x = 50 + Math.random() * (tank.clientWidth - 100);
-                this.y = tank.clientHeight; // Startet komplett unsichtbar unter dem Becken
-                this.targetY = tank.clientHeight - 85; // Soweit guckt er heraus
+                this.y = tank.clientHeight; 
+                this.targetY = tank.clientHeight - 85; 
                 this.state = 'emerging';
                 this.stateTimer = 0;
                 
-                // Für die realistische Animation
                 this.currentAngle = 0;
                 this.targetAngle = 0;
 
                 this.element = document.createElement('div');
                 this.element.className = 'absolute';
-                this.element.style.zIndex = '5'; // Z-Index 5 sorgt dafür, dass er exakt hinter dem vordersten Sand auftaucht
+                this.element.style.zIndex = '5'; 
                 this.element.style.transformOrigin = 'bottom center';
                 
                 this.element.innerHTML = `
                     <svg width="24" height="100" viewBox="0 0 24 100" style="transform-origin: bottom center;">
-                        <!-- Körper -->
                         <path d="M 6 100 L 6 20 Q 6 5 12 5 Q 18 5 18 20 L 18 100 Z" fill="#d1d5db" stroke="#9ca3af" stroke-width="2"/>
-                        <!-- Flecken -->
                         <circle cx="12" cy="30" r="2" fill="#4b5563" />
                         <circle cx="12" cy="50" r="2" fill="#4b5563" />
                         <circle cx="12" cy="70" r="2" fill="#4b5563" />
-                        <!-- Kopf / Augen -->
                         <circle cx="8" cy="12" r="2.5" fill="#000" />
                         <circle cx="16" cy="12" r="2.5" fill="#000" />
-                        <!-- Mund -->
                         <path d="M 10 18 Q 12 20 14 18" fill="none" stroke="#000" stroke-width="1.5"/>
                     </svg>
                 `;
@@ -683,7 +698,6 @@
                         this.stateTimer = 0;
                     }
                 } else if (this.state === 'looking') {
-                    // Geschmeidige "Knick"-Animation: Der Aal guckt in verschiedene Richtungen
                     if (this.stateTimer < 60) this.targetAngle = 0;
                     else if (this.stateTimer < 120) this.targetAngle = -35;
                     else if (this.stateTimer < 180) this.targetAngle = 25;
@@ -693,17 +707,16 @@
                         this.state = 'hiding';
                     }
 
-                    // Weiche Interpolation zum Zielwinkel
                     this.currentAngle += (this.targetAngle - this.currentAngle) * 0.1;
 
                 } else if (this.state === 'hiding') {
-                    this.y += 1.5; // Rückwärts im Sand verschwinden
+                    this.y += 1.5; 
                     this.targetAngle = 0;
                     this.currentAngle += (this.targetAngle - this.currentAngle) * 0.1;
                     
                     if (this.y >= tank.clientHeight) {
                         this.element.remove();
-                        currentEel = null; // Zerstören, damit wieder ein neuer spawnen kann
+                        currentEel = null; 
                         return; 
                     }
                 }
@@ -718,7 +731,6 @@
         }
 
 
-        // --- Klassen für Objekte im Aquarium ---
         class AquariumItem {
             constructor(type, startX, startY, svgContent, basePrice) {
                 this.type = type;
@@ -730,15 +742,29 @@
                 this.sizeMultiplier = 1.0;
                 this.framesAlive = 0;
                 
+                this.lastGrowthTime = 0; 
+                this.lastBreedTime = Date.now(); // Für den Cooldown der Paarung
+                
                 this.isAnimal = (['clownfish', 'bluetang', 'goldfish', 'angelfish', 'shrimp'].includes(type));
                 this.isClam = (type === 'clam');
                 this.isStarfish = (type === 'starfish');
-                this.isPlant = (['plant', 'redplant', 'seagrass'].includes(type)); 
+                this.isPlant = (['plant', 'redplant', 'seagrass', 'flowerplant'].includes(type)); 
+                this.isBlossom = (type === 'blossom');
                 
+                if (this.type === 'flowerplant') {
+                    // Timer startet beim Einsetzen
+                    this.lastBloomTime = Date.now();
+                }
+
                 this.element = document.createElement('div');
                 this.element.className = 'tank-item';
                 this.element.innerHTML = svgContent;
                 this.svgElement = this.element.querySelector('svg');
+                
+                if (this.type === 'flowerplant') {
+                    this.budElement = this.element.querySelector('.flower-bud');
+                    if (this.budElement) this.budElement.style.transform = 'scale(0)';
+                }
                 
                 if (this.isPlant || this.isStarfish) {
                     this.svgElement.style.transformOrigin = "bottom center";
@@ -759,6 +785,9 @@
                     this.vy = 0;
                     this.targetedFood = null;
                     this.pickNewTarget();
+                } else if (this.isBlossom) {
+                    this.vy = -0.5; 
+                    this.floorY = 20; 
                 } else {
                     this.vy = 0;
                     this.gravity = 0.2;
@@ -799,11 +828,18 @@
             update() {
                 if (this.isAnimal || this.isClam || this.isPlant || this.isStarfish) {
                     this.framesAlive++;
-                    if (this.framesAlive % 600 === 0) {
+                    // ~30% schnelleres passives Wachstum: statt 600 Frames jetzt alle 450 Frames
+                    if (this.framesAlive % 450 === 0) {
                         if (this.isAnimal || this.isClam || this.isStarfish) {
-                            this.currentPrice += 0.05; // Wertzuwachs für Tiere
+                            this.currentPrice += 0.05; 
+                            
+                            // Babys wachsen passiv (zeitlich) extrem viel schneller
+                            if (this.isAnimal && this.sizeMultiplier < 1.0) {
+                                this.sizeMultiplier += 0.03;
+                                this.currentPrice += 0.10;
+                            }
                         } else if (this.isPlant) {
-                            this.currentPrice += 0.02; // Auch Pflanzen steigen leicht im Wert
+                            this.currentPrice += 0.02; 
                         }
 
                         if ((this.isClam || this.isStarfish) && this.sizeMultiplier < 2.0) {
@@ -814,6 +850,32 @@
                             this.sizeMultiplier += 0.05;
                             this.svgElement.style.transform = `scale(${this.sizeMultiplier})`;
                         }
+                    }
+                }
+
+                // Blütenpflanze wächst sichtbar über 2 Minuten (120000ms) und löst sich dann
+                if (this.isPlant && this.type === 'flowerplant') {
+                    const now = Date.now();
+                    const bloomDuration = 120000;
+                    let progress = (now - this.lastBloomTime) / bloomDuration;
+                    
+                    if (progress >= 1.0) {
+                        this.lastBloomTime = now;
+                        progress = 0;
+                        const blossomSvg = `
+                            <svg width="24" height="24" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                                <circle cx="12" cy="12" r="4" fill="#facc15"/>
+                                <path d="M12 2 C15 5 15 8 12 8 C9 8 9 5 12 2 Z" fill="#f472b6" transform="rotate(0 12 12)"/>
+                                <path d="M12 2 C15 5 15 8 12 8 C9 8 9 5 12 2 Z" fill="#f472b6" transform="rotate(72 12 12)"/>
+                                <path d="M12 2 C15 5 15 8 12 8 C9 8 9 5 12 2 Z" fill="#f472b6" transform="rotate(144 12 12)"/>
+                                <path d="M12 2 C15 5 15 8 12 8 C9 8 9 5 12 2 Z" fill="#f472b6" transform="rotate(216 12 12)"/>
+                                <path d="M12 2 C15 5 15 8 12 8 C9 8 9 5 12 2 Z" fill="#f472b6" transform="rotate(288 12 12)"/>
+                            </svg>`;
+                        spawnItem('blossom', this.x + 10, this.y - (this.height * this.sizeMultiplier) + 20, blossomSvg, 3.00); 
+                    }
+                    
+                    if (this.budElement) {
+                        this.budElement.style.transform = `scale(${progress})`;
                     }
                 }
 
@@ -855,9 +917,20 @@
                         if (this.targetedFood) {
                             this.targetedFood.eat();
                             this.targetedFood = null;
-                            if (this.sizeMultiplier < 2.0) { 
-                                this.sizeMultiplier += 0.08;
-                                this.currentPrice += 0.40; 
+                            
+                            const now = Date.now();
+                            // ~30% reduzierter Cooldown (7000ms statt 10000ms)
+                            if (this.sizeMultiplier < 2.0 && (now - this.lastGrowthTime > 7000)) { 
+                                if (this.sizeMultiplier < 1.0) {
+                                    // Babys wachsen durch Futter sehr schnell
+                                    this.sizeMultiplier += 0.1;
+                                    this.currentPrice += 0.20;
+                                } else {
+                                    // Normale Fische wachsen ~30% schneller (0.015 statt 0.01)
+                                    this.sizeMultiplier += 0.015;
+                                    this.currentPrice += 0.065; 
+                                }
+                                this.lastGrowthTime = now;
                             }
                         }
                         this.pickNewTarget();
@@ -888,7 +961,6 @@
                         this.y += this.vy;
                     }
 
-                    // Boundaries
                     const padX = (this.width * this.sizeMultiplier) / 2;
                     const padY = (this.height * this.sizeMultiplier) / 2;
                     const centerX = this.x + this.width / 2;
@@ -940,6 +1012,14 @@
                     this.element.style.transform = `translate(${this.x}px, ${this.y}px)`;
                     this.svgElement.style.transform = `scaleX(${scaleX * this.sizeMultiplier}) scaleY(${this.sizeMultiplier}) rotate(${angle}deg)`;
 
+                } else if (this.isBlossom) {
+                    if (this.y > this.floorY) {
+                        this.y += this.vy;
+                        if (this.y < this.floorY) {
+                            this.y = this.floorY;
+                        }
+                    }
+                    this.element.style.transform = `translate(${this.x + Math.sin(Date.now() * 0.002) * 5}px, ${this.y}px)`;
                 } else {
                     if (this.y < this.floorY) {
                         this.vy += this.gravity;
@@ -950,7 +1030,6 @@
                             this.vy = 0;
                         }
                         this.element.style.transform = `translate(${this.x}px, ${this.y}px)`;
-                        // Wir verwenden hier das scale ohne Drehung (außer es ist ein Knick wie beim Aal, aber Aal ist eine eigene Klasse)
                         this.svgElement.style.transform = `scale(${this.sizeMultiplier})`;
                     }
                 }
@@ -962,11 +1041,68 @@
         }
 
         function spawnItem(type, x, y, svgContent, price) {
-            aquariumItems.push(new AquariumItem(type, x, y, svgContent, price));
+            const item = new AquariumItem(type, x, y, svgContent, price);
+            aquariumItems.push(item);
+            return item; // Gebe Element zurück, damit es manipuliert werden kann
+        }
+
+        function showBabyAnimation(x, y) {
+            const heart = document.createElement('div');
+            heart.className = 'baby-heart';
+            heart.innerText = '❤️';
+            heart.style.left = `${x}px`;
+            heart.style.top = `${y}px`;
+            tank.appendChild(heart);
+            setTimeout(() => heart.remove(), 2000);
+        }
+
+        function checkBreeding() {
+            const now = Date.now();
+            for (let i = 0; i < aquariumItems.length; i++) {
+                let itemA = aquariumItems[i];
+                if (!itemA.isAnimal) continue;
+
+                for (let j = i + 1; j < aquariumItems.length; j++) {
+                    let itemB = aquariumItems[j];
+                    if (!itemB.isAnimal) continue;
+
+                    // Wenn zwei gleiche Arten sich treffen
+                    if (itemA.type === itemB.type) {
+                        // Cooldown von 60 Sekunden für beide
+                        if (now - itemA.lastBreedTime > 60000 && now - itemB.lastBreedTime > 60000) {
+                            const dx = itemA.x - itemB.x;
+                            const dy = itemA.y - itemB.y;
+                            const dist = Math.sqrt(dx * dx + dy * dy);
+
+                            if (dist < 40) {
+                                // Seltene Chance bei Berührung
+                                if (Math.random() < 0.01) {
+                                    itemA.lastBreedTime = now;
+                                    itemB.lastBreedTime = now;
+                                    
+                                    const svg = getSvgContent(itemA.type);
+                                    const price = getBasePrice(itemA.type);
+                                    
+                                    const babyX = (itemA.x + itemB.x) / 2;
+                                    const babyY = (itemA.y + itemB.y) / 2;
+                                    
+                                    const baby = spawnItem(itemA.type, babyX, babyY, svg, price);
+                                    
+                                    // Eigenschaften des Babys
+                                    baby.sizeMultiplier = 0.4;
+                                    baby.currentPrice = price * 0.4;
+                                    baby.lastBreedTime = now; // Damit das Baby nicht sofort paart
+                                    
+                                    showBabyAnimation(babyX, babyY);
+                                }
+                            }
+                        }
+                    }
+                }
+            }
         }
 
         function gameLoop() {
-            // Aal-Spawner (selten)
             if (!currentEel && Math.random() < 0.0015) { 
                 currentEel = new GardenEel();
             }
@@ -986,6 +1122,8 @@
                 }
             }
             
+            checkBreeding(); // Überprüfen ob Fische ein Baby zeugen
+            
             requestAnimationFrame(gameLoop);
         }
 
@@ -995,6 +1133,8 @@
             aquariumItems.forEach(item => {
                 if (item.isAnimal) {
                     item.pickNewTarget(); 
+                } else if (item.isBlossom) {
+                    // Bleibt oben
                 } else {
                     item.floorY = tank.clientHeight - item.height - (Math.random() * 10);
                     if (item.y > item.floorY) {
