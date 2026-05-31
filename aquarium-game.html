@@ -25,6 +25,11 @@
             cursor: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='32' height='32' viewBox='0 0 24 24'%3E%3Cpath fill='%231f2937' d='M12 2a10 10 0 0 0-9.95 9h-1a1 1 0 0 0 0 2h1a10 10 0 0 0 19.9 0h1a1 1 0 0 0 0-2h-1A10 10 0 0 0 12 2zm0 18a8 8 0 0 1-7.93-7h15.86A8 8 0 0 1 12 20zm0-16a8 8 0 0 1 7.93 7H4.07A8 8 0 0 1 12 4z'/%3E%3C/svg%3E") 16 16, crosshair !important;
         }
 
+        /* Vergrößerter Schwamm-Cursor */
+        .cursor-sponge {
+            cursor: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='100' height='100' viewBox='0 0 100 100'%3E%3Crect x='10' y='20' width='80' height='60' rx='10' fill='%23fef08a' stroke='%23a16207' stroke-width='4'/%3E%3Ccircle cx='30' cy='40' r='6' fill='%23a16207' opacity='0.3'/%3E%3Ccircle cx='70' cy='50' r='8' fill='%23a16207' opacity='0.3'/%3E%3Ccircle cx='45' cy='65' r='5' fill='%23a16207' opacity='0.3'/%3E%3Ccircle cx='80' cy='30' r='4' fill='%23a16207' opacity='0.3'/%3E%3C/svg%3E") 50 50, pointer !important;
+        }
+
         .bubble {
             position: absolute;
             bottom: -20px;
@@ -40,7 +45,6 @@
             100% { transform: translateY(-100vh) scale(1.5); opacity: 0; }
         }
 
-        /* Animation für das Fisch-Baby */
         @keyframes heartFloat {
             0% { transform: translateY(0) scale(0.5); opacity: 1; }
             50% { transform: translateY(-20px) scale(1.2); opacity: 1; }
@@ -127,10 +131,13 @@
     </header>
 
     <main id="aquarium-tank" class="flex-grow w-full border-b-8 border-yellow-700/50">
-        <!-- NEU: Event Banner -->
-        <div id="event-banner" class="absolute top-4 left-1/2 transform -translate-x-1/2 bg-red-500 text-white px-6 py-2 rounded-full font-bold shadow-lg z-50 hidden items-center gap-2 transition-all duration-500">
-            <span>🎉 Event: Bunte Clownfische stark reduziert!</span>
+        <!-- Event Banner -->
+        <div id="event-banner" class="absolute top-4 left-1/2 transform -translate-x-1/2 bg-red-500 text-white px-6 py-2 rounded-full font-bold shadow-lg z-50 hidden items-center gap-2 transition-opacity duration-500 opacity-0">
+            <span id="event-banner-text">🎉 Event: Fische stark reduziert!</span>
         </div>
+
+        <!-- Canvas für Algenstruktur (klick-durchlässig) -->
+        <canvas id="algae-canvas" class="absolute top-0 left-0 w-full h-full pointer-events-none z-[18] opacity-80 mix-blend-multiply"></canvas>
 
         <!-- Hinterer Sand (Tiefe) -->
         <div class="absolute bottom-0 w-full h-16 bg-yellow-600/80 rounded-t-3xl blur-[2px] z-0"></div>
@@ -172,11 +179,22 @@
                 </svg>
                 <span class="text-xs text-purple-700 mt-1 font-bold">Kescher</span>
             </div>
+
+            <div id="sponge-btn" class="cursor-pointer transition-transform hover:scale-110 flex flex-col items-center p-2 rounded-lg">
+                <svg width="40" height="50" viewBox="0 0 40 50" xmlns="http://www.w3.org/2000/svg">
+                    <rect x="5" y="15" width="30" height="20" rx="4" fill="#fef08a" stroke="#a16207" stroke-width="2"/>
+                    <circle cx="12" cy="20" r="2" fill="#a16207" opacity="0.3"/>
+                    <circle cx="25" cy="28" r="3" fill="#a16207" opacity="0.3"/>
+                    <circle cx="15" cy="30" r="1.5" fill="#a16207" opacity="0.3"/>
+                    <circle cx="28" cy="18" r="2" fill="#a16207" opacity="0.3"/>
+                </svg>
+                <span class="text-xs text-yellow-700 mt-1 font-bold">Schwamm</span>
+            </div>
         </div>
 
         <div class="flex gap-4 shrink-0">
             <div class="flex flex-col items-center">
-                <div class="draggable transition-transform hover:scale-110 h-[50px] flex items-center" data-type="clownfish" data-price="2.00">
+                <div class="draggable transition-transform hover:scale-110 h-[50px] flex items-center" data-type="clownfish" data-price="2.00" data-event-hue="0">
                     <svg width="50" height="35" viewBox="0 0 100 60" xmlns="http://www.w3.org/2000/svg">
                         <path d="M 80 30 L 100 10 L 95 30 L 100 50 Z" fill="#ff7b00" stroke="#000" stroke-width="2"/>
                         <ellipse cx="50" cy="30" rx="35" ry="20" fill="#ff7b00" stroke="#000" stroke-width="2"/>
@@ -190,7 +208,7 @@
             </div>
 
             <div class="flex flex-col items-center">
-                <div class="draggable transition-transform hover:scale-110 h-[50px] flex items-center" data-type="bluetang" data-price="5.50">
+                <div class="draggable transition-transform hover:scale-110 h-[50px] flex items-center" data-type="bluetang" data-price="5.50" data-event-hue="0">
                     <svg width="60" height="40" viewBox="0 0 120 70" xmlns="http://www.w3.org/2000/svg">
                         <path d="M 90 35 L 120 15 L 115 35 L 120 55 Z" fill="#ffd700" stroke="#000" stroke-width="2"/>
                         <path d="M 10 35 C 10 10, 50 5, 95 25 C 95 45, 50 65, 10 35 Z" fill="#0044ff" stroke="#000" stroke-width="2"/>
@@ -203,7 +221,7 @@
             </div>
 
             <div class="flex flex-col items-center">
-                <div class="draggable transition-transform hover:scale-110 h-[50px] flex items-center" data-type="goldfish" data-price="1.50">
+                <div class="draggable transition-transform hover:scale-110 h-[50px] flex items-center" data-type="goldfish" data-price="1.50" data-event-hue="0">
                     <svg width="50" height="35" viewBox="0 0 100 70" xmlns="http://www.w3.org/2000/svg">
                         <path d="M 75 35 Q 100 10 100 35 Q 100 60 75 35 Z" fill="#f97316" stroke="#c2410c" stroke-width="2"/>
                         <ellipse cx="45" cy="35" rx="35" ry="25" fill="#f97316" stroke="#c2410c" stroke-width="2"/>
@@ -215,12 +233,12 @@
             </div>
 
             <div class="flex flex-col items-center">
-                <div class="draggable transition-transform hover:scale-110 h-[50px] flex items-center" data-type="angelfish" data-price="8.00">
+                <div class="draggable transition-transform hover:scale-110 h-[50px] flex items-center" data-type="angelfish" data-price="8.00" data-event-hue="0">
                     <svg width="40" height="45" viewBox="0 0 80 100" xmlns="http://www.w3.org/2000/svg">
-                        <path d="M 10 50 L 70 10 L 70 90 Z" fill="#e5e7eb" stroke="#9ca3af" stroke-width="2"/>
-                        <path d="M 30 40 L 30 60" stroke="#374151" stroke-width="4"/>
-                        <path d="M 50 25 L 50 75" stroke="#374151" stroke-width="4"/>
-                        <path d="M 70 50 L 90 30 L 90 70 Z" fill="#e5e7eb" stroke="#9ca3af" stroke-width="2"/>
+                        <path d="M 10 50 L 70 10 L 70 90 Z" fill="#93c5fd" stroke="#2563eb" stroke-width="2"/>
+                        <path d="M 30 40 L 30 60" stroke="#1e3a8a" stroke-width="4"/>
+                        <path d="M 50 25 L 50 75" stroke="#1e3a8a" stroke-width="4"/>
+                        <path d="M 70 50 L 90 30 L 90 70 Z" fill="#93c5fd" stroke="#2563eb" stroke-width="2"/>
                         <circle cx="25" cy="50" r="3" fill="#fff" stroke="#000" stroke-width="1"/>
                     </svg>
                 </div>
@@ -228,7 +246,7 @@
             </div>
 
             <div class="flex flex-col items-center">
-                <div class="draggable transition-transform hover:scale-110 h-[50px] flex items-center" data-type="shrimp" data-price="3.50">
+                <div class="draggable transition-transform hover:scale-110 h-[50px] flex items-center" data-type="shrimp" data-price="3.50" data-event-hue="0">
                     <svg width="45" height="35" viewBox="0 0 60 50" xmlns="http://www.w3.org/2000/svg">
                         <path d="M 10 40 Q 20 20 40 20 Q 50 30 45 40" fill="none" stroke="#f87171" stroke-width="8" stroke-linecap="round"/>
                         <path d="M 45 40 L 55 45 L 45 50 Z" fill="#f87171"/>
@@ -349,11 +367,13 @@
         </div>
     </footer>
 
-    <!-- NEU: Entwicklerabschnitt -->
+    <!-- Dev Tools um Funktionen erweitert -->
     <div id="dev-panel" class="bg-gray-800 text-gray-300 p-2 text-xs flex gap-4 items-center z-30 shadow-inner overflow-x-auto shrink-0">
         <span class="font-bold uppercase tracking-wider text-gray-500">Dev Tools:</span>
-        <button id="dev-btn-clownfish" class="bg-gray-700 hover:bg-gray-500 text-white px-3 py-1 rounded border border-gray-600 transition-colors">Clownfisch Event</button>
+        <button id="dev-btn-event" class="bg-gray-700 hover:bg-gray-500 text-white px-3 py-1 rounded border border-gray-600 transition-colors">Tier-Event</button>
         <button id="dev-btn-eel" class="bg-gray-700 hover:bg-gray-500 text-white px-3 py-1 rounded border border-gray-600 transition-colors">Spawne Röhrenaal</button>
+        <button id="dev-btn-money" class="bg-gray-700 hover:bg-gray-500 text-green-400 font-bold px-3 py-1 rounded border border-gray-600 transition-colors">+ 20 €</button>
+        <button id="dev-btn-algae" class="bg-gray-700 hover:bg-gray-500 text-white px-3 py-1 rounded border border-gray-600 transition-colors">Algen spawnen</button>
     </div>
 
     <script>
@@ -364,8 +384,37 @@
         const budgetDisplay = document.getElementById('budget-display');
         const inventoryValueDisplay = document.getElementById('inventory-value-display');
         const sellBtn = document.getElementById('sell-btn');
-        const netBtn = document.getElementById('net-btn'); // Fehler behoben: netBtn war nicht definiert
+        const netBtn = document.getElementById('net-btn'); 
+        const spongeBtn = document.getElementById('sponge-btn'); 
         
+        // --- Algen Canvas Setup ---
+        const algaeCanvas = document.getElementById('algae-canvas');
+        const algaeCtx = algaeCanvas.getContext('2d');
+        
+        function resizeAlgaeCanvas() {
+            // Speichere den aktuellen Zustand um ihn nicht beim Resize zu verlieren
+            const tempCanvas = document.createElement('canvas');
+            tempCanvas.width = algaeCanvas.width;
+            tempCanvas.height = algaeCanvas.height;
+            const tempCtx = tempCanvas.getContext('2d');
+            
+            let hasContent = false;
+            if (algaeCanvas.width > 0 && algaeCanvas.height > 0) {
+                tempCtx.drawImage(algaeCanvas, 0, 0);
+                hasContent = true;
+            }
+
+            algaeCanvas.width = tank.clientWidth;
+            algaeCanvas.height = tank.clientHeight;
+            
+            if (hasContent && tempCanvas.width > 0 && tempCanvas.height > 0) {
+                algaeCtx.drawImage(tempCanvas, 0, 0);
+            }
+        }
+        window.addEventListener('resize', resizeAlgaeCanvas);
+        // Initialer Aufruf nach kurzem Warten für korrekte Tank-Dimensionen
+        setTimeout(resizeAlgaeCanvas, 100);
+
         const aquariumItems = [];
         const foodParticles = [];
         let currentEel = null; 
@@ -373,93 +422,163 @@
         let draggedElement = null;
         let currentType = null;
         let currentBasePrice = 0;
+        let currentEventHue = 0; 
         let offsetX = 0, offsetY = 0;
 
         let budget = 20.00;
         let currentInventoryValue = 0.00;
 
-        // --- Event Logik ---
-        let clownfishEventTimeout;
-        let nextClownfishEventTimeout;
-        const clownfishOriginalPrice = 2.00;
-        const clownfishDiscountPrice = 1.00;
-        const clownfishColors = ['#ef4444', '#3b82f6', '#10b981', '#a855f7', '#ec4899', '#14b8a6'];
-        
-        // Element auslesen (kann null sein, bevor das DOM komplett geladen ist, daher holen wir es einmalig sicher)
-        const clownfishShopElement = document.querySelector('.draggable[data-type="clownfish"]');
-        if (clownfishShopElement) {
-            clownfishShopElement.dataset.currentColor = '#ff7b00';
+        // --- Algen-Logik ---
+        let lastAlgaeCleanTime = Date.now();
+        let isWiping = false;
+
+        function drawAlgaePatch(x, y) {
+            algaeCtx.save();
+            // Erzeuge ein Cluster aus leicht unterschiedlichen Kreisen für organisches Wachstum
+            for(let i = 0; i < 20; i++) {
+                const ox = x + (Math.random() - 0.5) * 100;
+                const oy = y + (Math.random() - 0.5) * 100;
+                const radius = Math.random() * 25 + 10;
+                
+                // Grüntöne mit etwas Braun für realistische Algen
+                const r = 20 + Math.random() * 30;
+                const g = 80 + Math.random() * 60;
+                const b = 20 + Math.random() * 20;
+                const a = 0.05 + Math.random() * 0.1;
+                
+                algaeCtx.fillStyle = `rgba(${r}, ${g}, ${b}, ${a})`;
+                algaeCtx.beginPath();
+                algaeCtx.arc(ox, oy, radius, 0, Math.PI*2);
+                algaeCtx.fill();
+            }
+            algaeCtx.restore();
         }
 
-        function startClownfishEvent() {
-            if (!clownfishShopElement) return;
-            if (clownfishEventTimeout) clearTimeout(clownfishEventTimeout);
+        // --- Werkzeug-Status ---
+        let isNetActive = false;
+        let isSpongeActive = false;
+
+        // --- Event Logik ---
+        let animalEventTimeout;
+        let nextAnimalEventTimeout;
+        let hideBannerTimeout;
+        let activeEventType = null;
+        let activeEventOriginalPrice = 0;
+
+        const eventAnimals = ['clownfish', 'bluetang', 'goldfish', 'angelfish', 'shrimp'];
+        const animalNames = {
+            'clownfish': 'Clownfische',
+            'bluetang': 'Paletten-Doktorfische',
+            'goldfish': 'Goldfische',
+            'angelfish': 'Skalare',
+            'shrimp': 'Garnelen'
+        };
+
+        function startAnimalEvent() {
+            if (activeEventType) endAnimalEvent();
+
+            activeEventType = eventAnimals[Math.floor(Math.random() * eventAnimals.length)];
+            const shopElement = document.querySelector(`.draggable[data-type="${activeEventType}"]`);
+            if (!shopElement) return;
+
+            if (animalEventTimeout) clearTimeout(animalEventTimeout);
+            if (hideBannerTimeout) clearTimeout(hideBannerTimeout);
 
             const banner = document.getElementById('event-banner');
             if (banner) {
+                document.getElementById('event-banner-text').innerText = `🎉 Event: Bunte ${animalNames[activeEventType]} stark reduziert!`;
                 banner.classList.remove('hidden');
                 banner.classList.add('flex');
+                
+                setTimeout(() => {
+                    banner.classList.remove('opacity-0');
+                    banner.classList.add('opacity-100');
+                }, 50);
+
+                hideBannerTimeout = setTimeout(() => {
+                    banner.classList.remove('opacity-100');
+                    banner.classList.add('opacity-0');
+                    setTimeout(() => {
+                        banner.classList.add('hidden');
+                        banner.classList.remove('flex');
+                    }, 500); 
+                }, 8000);
             }
 
-            const randomColor = clownfishColors[Math.floor(Math.random() * clownfishColors.length)];
+            activeEventOriginalPrice = parseFloat(shopElement.dataset.price);
+            const discountPrice = Math.max(0.50, activeEventOriginalPrice * 0.5); 
 
-            clownfishShopElement.dataset.price = clownfishDiscountPrice;
-            clownfishShopElement.nextElementSibling.innerText = formatCurrency(clownfishDiscountPrice) + ' (Sale!)';
-            clownfishShopElement.nextElementSibling.classList.add('text-red-600');
+            const randomHue = Math.floor(Math.random() * 360);
+            
+            shopElement.dataset.price = discountPrice;
+            shopElement.dataset.eventHue = randomHue;
+            shopElement.style.filter = `hue-rotate(${randomHue}deg)`;
+            
+            shopElement.nextElementSibling.innerText = formatCurrency(discountPrice) + ' (Sale!)';
+            shopElement.nextElementSibling.classList.add('text-red-600');
 
-            const currentColor = clownfishShopElement.dataset.currentColor;
-            const svgs = clownfishShopElement.querySelectorAll(`path[fill="${currentColor}"], ellipse[fill="${currentColor}"]`);
-            svgs.forEach(el => el.setAttribute('fill', randomColor));
-            clownfishShopElement.dataset.currentColor = randomColor;
-
-            clownfishEventTimeout = setTimeout(endClownfishEvent, 30000); 
+            animalEventTimeout = setTimeout(endAnimalEvent, 30000); 
         }
 
-        function endClownfishEvent() {
-            if (!clownfishShopElement) return;
+        function endAnimalEvent() {
+            if (!activeEventType) return;
+            
+            const shopElement = document.querySelector(`.draggable[data-type="${activeEventType}"]`);
+            if (shopElement) {
+                shopElement.dataset.price = activeEventOriginalPrice;
+                shopElement.dataset.eventHue = 0;
+                shopElement.style.filter = 'none';
+                
+                shopElement.nextElementSibling.innerText = formatCurrency(activeEventOriginalPrice);
+                shopElement.nextElementSibling.classList.remove('text-red-600');
+            }
+
             const banner = document.getElementById('event-banner');
-            if (banner) {
-                banner.classList.add('hidden');
-                banner.classList.remove('flex');
+            if (banner && !banner.classList.contains('hidden')) {
+                banner.classList.add('opacity-0');
+                banner.classList.remove('opacity-100');
+                setTimeout(() => {
+                    banner.classList.add('hidden');
+                    banner.classList.remove('flex');
+                }, 500);
             }
 
-            clownfishShopElement.dataset.price = clownfishOriginalPrice;
-            clownfishShopElement.nextElementSibling.innerText = formatCurrency(clownfishOriginalPrice);
-            clownfishShopElement.nextElementSibling.classList.remove('text-red-600');
-
-            const currentColor = clownfishShopElement.dataset.currentColor;
-            const svgs = clownfishShopElement.querySelectorAll(`path[fill="${currentColor}"], ellipse[fill="${currentColor}"]`);
-            svgs.forEach(el => el.setAttribute('fill', '#ff7b00'));
-            clownfishShopElement.dataset.currentColor = '#ff7b00';
-
-            scheduleNextClownfishEvent();
+            activeEventType = null;
+            scheduleNextAnimalEvent();
         }
 
-        function scheduleNextClownfishEvent() {
-            if (nextClownfishEventTimeout) clearTimeout(nextClownfishEventTimeout);
-            const delay = 120000 + Math.random() * 120000;
-            nextClownfishEventTimeout = setTimeout(startClownfishEvent, delay);
+        function scheduleNextAnimalEvent() {
+            if (nextAnimalEventTimeout) clearTimeout(nextAnimalEventTimeout);
+            const delay = 120000 + Math.random() * 120000; 
+            nextAnimalEventTimeout = setTimeout(startAnimalEvent, delay);
         }
 
         // --- Dev Panel Listener ---
-        const devBtnClown = document.getElementById('dev-btn-clownfish');
+        const devBtnEvent = document.getElementById('dev-btn-event');
         const devBtnEel = document.getElementById('dev-btn-eel');
-        if (devBtnClown) devBtnClown.addEventListener('click', startClownfishEvent);
+        const devBtnMoney = document.getElementById('dev-btn-money');
+        const devBtnAlgae = document.getElementById('dev-btn-algae');
+        
+        if (devBtnEvent) devBtnEvent.addEventListener('click', startAnimalEvent);
         if (devBtnEel) devBtnEel.addEventListener('click', () => {
             if (!currentEel) currentEel = new GardenEel();
         });
+        if (devBtnMoney) devBtnMoney.addEventListener('click', () => {
+            budget += 20;
+            updateUI();
+        });
+        if (devBtnAlgae) devBtnAlgae.addEventListener('click', () => {
+            // Spawnt zufällig Algen an verschiedenen Stellen
+            for(let i=0; i<6; i++) {
+                drawAlgaePatch(Math.random() * algaeCanvas.width, Math.random() * algaeCanvas.height);
+            }
+        });
 
-        // Event-Zyklus initial starten
-        scheduleNextClownfishEvent();
+        scheduleNextAnimalEvent();
 
         function getBasePrice(type) {
             const el = document.querySelector(`.draggable[data-type="${type}"]`);
             return el ? parseFloat(el.dataset.price) : 1.0;
-        }
-
-        function getSvgContent(type) {
-            const el = document.querySelector(`.draggable[data-type="${type}"]`);
-            return el ? el.querySelector('svg').outerHTML : '';
         }
 
         function updateUI() {
@@ -472,19 +591,62 @@
             }
         }
 
-        let isNetActive = false;
-        
+        // --- Werkzeuge: Kescher und Schwamm ---
+        function disableTools() {
+            isNetActive = false;
+            isSpongeActive = false;
+            netBtn.classList.remove('bg-purple-200');
+            spongeBtn.classList.remove('bg-yellow-200');
+            tank.classList.remove('cursor-net', 'cursor-sponge');
+            isWiping = false;
+        }
+
         netBtn.addEventListener('click', () => {
-            isNetActive = !isNetActive;
-            if (isNetActive) {
+            const wasActive = isNetActive;
+            disableTools();
+            if (!wasActive) {
+                isNetActive = true;
                 netBtn.classList.add('bg-purple-200');
                 tank.classList.add('cursor-net');
-            } else {
-                netBtn.classList.remove('bg-purple-200');
-                tank.classList.remove('cursor-net');
             }
         });
 
+        spongeBtn.addEventListener('click', () => {
+            const wasActive = isSpongeActive;
+            disableTools();
+            if (!wasActive) {
+                isSpongeActive = true;
+                spongeBtn.classList.add('bg-yellow-200');
+                tank.classList.add('cursor-sponge');
+            }
+        });
+
+        // Wisch-Mechanik auf dem Canvas (Radiergummi)
+        tank.addEventListener('pointerdown', (e) => {
+            if (isSpongeActive) isWiping = true;
+        });
+
+        window.addEventListener('pointerup', () => {
+            isWiping = false;
+        });
+
+        tank.addEventListener('pointermove', (e) => {
+            if (isSpongeActive && isWiping) {
+                const rect = tank.getBoundingClientRect();
+                const x = e.clientX - rect.left;
+                const y = e.clientY - rect.top;
+
+                algaeCtx.globalCompositeOperation = 'destination-out';
+                algaeCtx.beginPath();
+                algaeCtx.arc(x, y, 60, 0, Math.PI * 2); // 120px Durchmesser für den großen Schwamm
+                algaeCtx.fill();
+                algaeCtx.globalCompositeOperation = 'source-over'; // Zurücksetzen für zukünftiges Zeichnen
+                
+                lastAlgaeCleanTime = Date.now();
+            }
+        });
+
+        // Kescher-Fangen Mechanik
         tank.addEventListener('click', (e) => {
             if (!isNetActive) return;
 
@@ -534,6 +696,10 @@
             svgClone.style.transform = `scale(${item.sizeMultiplier})`;
             svgClone.style.transition = 'none';
             bagDiv.appendChild(svgClone);
+
+            if (item.hueRotate > 0) {
+                svgClone.style.filter = `hue-rotate(${item.hueRotate}deg)`;
+            }
 
             const priceTag = document.createElement('div');
             priceTag.className = 'absolute bottom-1 bg-white px-2 py-0.5 rounded text-[10px] font-bold text-green-700 shadow-sm z-10';
@@ -588,11 +754,7 @@
 
         const foodBtn = document.getElementById('fish-food-btn');
         foodBtn.addEventListener('click', () => {
-            if (isNetActive) {
-                isNetActive = false;
-                netBtn.classList.remove('bg-purple-200');
-                tank.classList.remove('cursor-net');
-            }
+            disableTools();
 
             if (budget >= 0.20) {
                 budget -= 0.20;
@@ -670,11 +832,7 @@
         });
 
         function startDrag(e) {
-            if (isNetActive) {
-                isNetActive = false;
-                netBtn.classList.remove('bg-purple-200');
-                tank.classList.remove('cursor-net');
-            }
+            disableTools();
             
             e.preventDefault();
             
@@ -688,6 +846,7 @@
             }
             
             currentType = originalElement.dataset.type;
+            currentEventHue = originalElement.dataset.eventHue ? parseInt(originalElement.dataset.eventHue) : 0;
             
             draggedElement = originalElement.cloneNode(true);
             draggedElement.style.position = 'fixed';
@@ -726,12 +885,13 @@
                 updateUI();
 
                 const svgContent = draggedElement.querySelector('svg').outerHTML;
-                spawnItem(currentType, dropX, dropY, svgContent, currentBasePrice);
+                spawnItem(currentType, dropX, dropY, svgContent, currentBasePrice, currentEventHue);
             }
 
             draggedElement.remove();
             draggedElement = null;
             currentType = null;
+            currentEventHue = 0;
             
             document.removeEventListener('pointermove', moveDrag);
             document.removeEventListener('pointerup', endDrag);
@@ -813,10 +973,11 @@
         }
 
         class AquariumItem {
-            constructor(type, startX, startY, svgContent, basePrice) {
+            constructor(type, startX, startY, svgContent, basePrice, hueRotate = 0) {
                 this.type = type;
                 this.x = startX;
                 this.y = startY;
+                this.hueRotate = hueRotate;
                 
                 this.basePrice = basePrice;
                 this.currentPrice = basePrice;
@@ -841,6 +1002,10 @@
                 this.element.innerHTML = svgContent;
                 this.svgElement = this.element.querySelector('svg');
                 
+                if (this.hueRotate > 0) {
+                    this.svgElement.style.filter = `hue-rotate(${this.hueRotate}deg)`;
+                }
+
                 if (this.type === 'flowerplant') {
                     this.budElement = this.element.querySelector('.flower-bud');
                     if (this.budElement) this.budElement.style.transform = 'scale(0)';
@@ -948,7 +1113,7 @@
                                 <path d="M12 2 C15 5 15 8 12 8 C9 8 9 5 12 2 Z" fill="#f472b6" transform="rotate(216 12 12)"/>
                                 <path d="M12 2 C15 5 15 8 12 8 C9 8 9 5 12 2 Z" fill="#f472b6" transform="rotate(288 12 12)"/>
                             </svg>`;
-                        spawnItem('blossom', this.x + 10, this.y - (this.height * this.sizeMultiplier) + 20, blossomSvg, 3.00); 
+                        spawnItem('blossom', this.x + 10, this.y - (this.height * this.sizeMultiplier) + 20, blossomSvg, 3.00, 0); 
                     }
                     
                     if (this.budElement) {
@@ -1114,8 +1279,8 @@
             }
         }
 
-        function spawnItem(type, x, y, svgContent, price) {
-            const item = new AquariumItem(type, x, y, svgContent, price);
+        function spawnItem(type, x, y, svgContent, price, hueRotate = 0) {
+            const item = new AquariumItem(type, x, y, svgContent, price, hueRotate);
             aquariumItems.push(item);
             return item; 
         }
@@ -1147,20 +1312,20 @@
                             const dist = Math.sqrt(dx * dx + dy * dy);
 
                             if (dist < 40) {
-                            if (Math.random() < 0.01) {
-                                itemA.lastBreedTime = now;
-                                itemB.lastBreedTime = now;
-                                
-                                const svg = itemA.element.innerHTML;
-                                const price = getBasePrice(itemA.type);
-                                
-                                const babyX = (itemA.x + itemB.x) / 2;
-                                const babyY = (itemA.y + itemB.y) / 2;
-                                
-                                const baby = spawnItem(itemA.type, babyX, babyY, svg, price);
-                                
-                                baby.sizeMultiplier = 0.4;
-                                baby.currentPrice = price * 0.4;
+                                if (Math.random() < 0.01) {
+                                    itemA.lastBreedTime = now;
+                                    itemB.lastBreedTime = now;
+                                    
+                                    const svg = document.querySelector(`.draggable[data-type="${itemA.type}"]`).querySelector('svg').outerHTML;
+                                    const price = getBasePrice(itemA.type);
+                                    
+                                    const babyX = (itemA.x + itemB.x) / 2;
+                                    const babyY = (itemA.y + itemB.y) / 2;
+                                    
+                                    const baby = spawnItem(itemA.type, babyX, babyY, svg, price, itemA.hueRotate);
+                                    
+                                    baby.sizeMultiplier = 0.4;
+                                    baby.currentPrice = price * 0.4;
                                     baby.lastBreedTime = now; 
                                     
                                     showBabyAnimation(babyX, babyY);
@@ -1173,6 +1338,13 @@
         }
 
         function gameLoop() {
+            // Algenwachstum per Zufall (etwa einmal pro Sekunde eine neue Struktur)
+            if (Date.now() - lastAlgaeCleanTime > 30000) { 
+                if (Math.random() < 0.02) { 
+                    drawAlgaePatch(Math.random() * algaeCanvas.width, Math.random() * algaeCanvas.height);
+                }
+            }
+
             if (!currentEel && Math.random() < 0.0015) { 
                 currentEel = new GardenEel();
             }
@@ -1198,22 +1370,6 @@
         }
 
         gameLoop();
-
-        window.addEventListener('resize', () => {
-            aquariumItems.forEach(item => {
-                if (item.isAnimal) {
-                    item.pickNewTarget(); 
-                } else if (item.isBlossom) {
-                    // Bleibt oben
-                } else {
-                    item.floorY = tank.clientHeight - item.height - (Math.random() * 10);
-                    if (item.y > item.floorY) {
-                        item.y = item.floorY;
-                        item.updateTransform();
-                    }
-                }
-            });
-        });
     </script>
 </body>
 </html>
