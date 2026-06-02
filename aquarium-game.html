@@ -294,6 +294,53 @@
                 </div>
 
                 <div class="flex flex-col items-center">
+                    <div class="draggable transition-transform hover:scale-110 flex items-center h-[35px] md:h-[50px] shrink-0" data-type="pufferfish" data-price="6.60" data-event-hue="0">
+                        <svg class="h-full w-auto" width="100" height="70" viewBox="0 0 200 120" xmlns="http://www.w3.org/2000/svg">
+                            <!-- Schwanzflosse (rechts) -->
+                            <path d="M 148 55 L 170 35 L 163 55 L 170 75 Z" fill="#fbbf24" stroke="#ca8a04" stroke-width="2"/>
+                            <!-- Körper -->
+                            <circle cx="95" cy="55" r="42" fill="#fbbf24" stroke="#ca8a04" stroke-width="2"/>
+                            <!-- Bauch heller -->
+                            <ellipse cx="95" cy="68" rx="28" ry="18" fill="#fef3c7" stroke="none"/>
+                            <!-- Stacheln oben -->
+                            <line x1="115" y1="14" x2="118" y2="5" stroke="#d97706" stroke-width="2.5" stroke-linecap="round"/>
+                            <line x1="100" y1="13" x2="100" y2="3" stroke="#d97706" stroke-width="2.5" stroke-linecap="round"/>
+                            <line x1="85" y1="14" x2="82" y2="4" stroke="#d97706" stroke-width="2.5" stroke-linecap="round"/>
+                            <line x1="72" y1="21" x2="66" y2="13" stroke="#d97706" stroke-width="2.5" stroke-linecap="round"/>
+                            <!-- Stacheln rechts (Schwanzseite) -->
+                            <line x1="134" y1="42" x2="143" y2="37" stroke="#d97706" stroke-width="2.5" stroke-linecap="round"/>
+                            <line x1="136" y1="55" x2="146" y2="55" stroke="#d97706" stroke-width="2.5" stroke-linecap="round"/>
+                            <line x1="134" y1="68" x2="143" y2="73" stroke="#d97706" stroke-width="2.5" stroke-linecap="round"/>
+                            <!-- Stacheln links (Kopfseite) -->
+                            <line x1="56" y1="42" x2="48" y2="37" stroke="#d97706" stroke-width="2.5" stroke-linecap="round"/>
+                            <line x1="54" y1="55" x2="44" y2="55" stroke="#d97706" stroke-width="2.5" stroke-linecap="round"/>
+                            <!-- Stacheln unten -->
+                            <line x1="72" y1="89" x2="66" y2="97" stroke="#d97706" stroke-width="2.5" stroke-linecap="round"/>
+                            <line x1="85" y1="96" x2="82" y2="106" stroke="#d97706" stroke-width="2.5" stroke-linecap="round"/>
+                            <line x1="100" y1="97" x2="100" y2="107" stroke="#d97706" stroke-width="2.5" stroke-linecap="round"/>
+                            <line x1="115" y1="96" x2="118" y2="105" stroke="#d97706" stroke-width="2.5" stroke-linecap="round"/>
+                            <!-- Braune Flecken -->
+                            <circle cx="105" cy="40" r="5" fill="#b45309" opacity="0.35"/>
+                            <circle cx="82" cy="46" r="6" fill="#b45309" opacity="0.3"/>
+                            <circle cx="112" cy="54" r="4" fill="#b45309" opacity="0.3"/>
+                            <circle cx="90" cy="60" r="5" fill="#b45309" opacity="0.25"/>
+                            <circle cx="102" cy="66" r="3.5" fill="#b45309" opacity="0.28"/>
+                            <!-- Rückenflosse oben -->
+                            <path d="M 92 14 Q 84 5 76 14" fill="#fbbf24" stroke="#ca8a04" stroke-width="1.5"/>
+                            <!-- Brustflosse (links, Kopfseite) -->
+                            <path d="M 60 54 L 46 48 L 48 55 L 44 62 Z" fill="#fbbf24" stroke="#ca8a04" stroke-width="1.5"/>
+                            <!-- Auge -->
+                            <circle cx="62" cy="46" r="8" fill="#fff" stroke="#000" stroke-width="1.5"/>
+                            <circle cx="61" cy="46" r="4" fill="#000"/>
+                            <circle cx="63" cy="44" r="1.5" fill="#fff"/>
+                            <!-- Mund -->
+                            <path d="M 52 57 Q 49 59 52 61" fill="none" stroke="#000" stroke-width="2" stroke-linecap="round"/>
+                        </svg>
+                    </div>
+                    <span class="text-[10px] md:text-xs font-bold text-gray-700 mt-1">6,60 €</span>
+                </div>
+
+                <div class="flex flex-col items-center">
                     <div class="draggable transition-transform hover:scale-110 flex items-center h-[35px] md:h-[50px] shrink-0" data-type="clam" data-price="12.00">
                         <svg class="h-full w-auto" width="50" height="40" viewBox="0 0 50 40" xmlns="http://www.w3.org/2000/svg">
                             <path d="M 5 35 C 0 15 20 0 45 15 C 48 30 30 40 5 35 Z" fill="#4c1d95" stroke="#312e81" stroke-width="2"/>
@@ -508,13 +555,14 @@
         let activeEventType = null;
         let activeEventOriginalPrice = 0;
 
-        const eventAnimals = ['clownfish', 'bluetang', 'goldfish', 'angelfish', 'shrimp'];
+        const eventAnimals = ['clownfish', 'bluetang', 'goldfish', 'angelfish', 'shrimp', 'pufferfish'];
         const animalNames = {
             'clownfish': 'Clownfische',
             'bluetang': 'Paletten-Doktorfische',
             'goldfish': 'Goldfische',
             'angelfish': 'Skalare',
-            'shrimp': 'Garnelen'
+            'shrimp': 'Garnelen',
+            'pufferfish': 'Kugelfische'
         };
 
         function startAnimalEvent() {
@@ -730,7 +778,11 @@
             emptyInventoryText.style.display = 'none';
 
             const bagDiv = document.createElement('div');
-            bagDiv.className = 'plastic-bag';
+            bagDiv.className = 'plastic-bag draggable-bag';
+            bagDiv.setAttribute('data-item-type', item.type);
+            bagDiv.setAttribute('data-item-price', item.currentPrice);
+            bagDiv.setAttribute('data-item-size', item.sizeMultiplier);
+            bagDiv.setAttribute('data-item-hue', item.hueRotate);
             
             const svgClone = item.svgElement.cloneNode(true);
             svgClone.style.transform = `scale(${item.sizeMultiplier})`;
@@ -746,6 +798,8 @@
             priceTag.innerText = formatCurrency(item.currentPrice);
             bagDiv.appendChild(priceTag);
 
+            bagDiv.addEventListener('pointerdown', startDragBag);
+
             inventoryArea.appendChild(bagDiv);
 
             currentInventoryValue += item.currentPrice;
@@ -759,7 +813,11 @@
             emptyInventoryText.style.display = 'none';
 
             const bagDiv = document.createElement('div');
-            bagDiv.className = 'plastic-bag';
+            bagDiv.className = 'plastic-bag draggable-bag';
+            bagDiv.setAttribute('data-item-type', 'eel');
+            bagDiv.setAttribute('data-item-price', '1.00');
+            bagDiv.setAttribute('data-item-size', '0.6');
+            bagDiv.setAttribute('data-item-hue', '0');
             
             const svgClone = eel.svgElement.cloneNode(true);
             svgClone.style.transform = 'scale(0.6)'; 
@@ -770,6 +828,8 @@
             priceTag.className = 'absolute bottom-1 bg-white px-2 py-0.5 rounded text-[10px] md:text-xs font-bold text-green-700 shadow-sm z-10';
             priceTag.innerText = formatCurrency(1.00); 
             bagDiv.appendChild(priceTag);
+
+            bagDiv.addEventListener('pointerdown', startDragBag);
 
             inventoryArea.appendChild(bagDiv);
 
@@ -872,10 +932,117 @@
         let dragStartX = 0;
         let dragStartY = 0;
         let isDragging = false;
+        
+        let draggedBagElement = null;
+        let draggedBagSourceElement = null;
+        let isDraggingBag = false;
 
         draggables.forEach(item => {
             item.addEventListener('pointerdown', startDrag);
         });
+
+        function startDragBag(e) {
+            disableTools();
+            draggedBagSourceElement = e.currentTarget;
+            dragStartX = e.clientX;
+            dragStartY = e.clientY;
+            
+            document.addEventListener('pointermove', moveDragBag, { passive: false });
+            document.addEventListener('pointerup', endDragBag);
+            document.addEventListener('pointercancel', cancelDragBag);
+        }
+
+        function moveDragBag(e) {
+            if (!isDraggingBag && draggedBagSourceElement) {
+                const dx = e.clientX - dragStartX;
+                const dy = e.clientY - dragStartY;
+                
+                if (Math.abs(dx) > 10 || Math.abs(dy) > 10) {
+                    isDraggingBag = true;
+
+                    draggedBagElement = draggedBagSourceElement.cloneNode(true);
+                    draggedBagElement.style.position = 'fixed';
+                    draggedBagElement.style.pointerEvents = 'none';
+                    draggedBagElement.style.zIndex = '9999';
+                    
+                    const rect = draggedBagSourceElement.getBoundingClientRect();
+                    draggedBagElement.style.width = `${rect.width}px`;
+                    draggedBagElement.style.height = `${rect.height}px`;
+
+                    document.body.appendChild(draggedBagElement);
+                    
+                    offsetX = rect.width / 2;
+                    offsetY = rect.height / 2;
+                }
+            }
+
+            if (isDraggingBag && draggedBagElement) {
+                e.preventDefault(); 
+                draggedBagElement.style.left = `${e.clientX - offsetX}px`;
+                draggedBagElement.style.top = `${e.clientY - offsetY}px`;
+            }
+        }
+
+        function cancelDragBag() {
+            draggedBagSourceElement = null;
+            isDraggingBag = false;
+            if (draggedBagElement) {
+                draggedBagElement.remove();
+                draggedBagElement = null;
+            }
+            document.removeEventListener('pointermove', moveDragBag);
+            document.removeEventListener('pointerup', endDragBag);
+            document.removeEventListener('pointercancel', cancelDragBag);
+        }
+
+        function endDragBag(e) {
+            if (isDraggingBag && draggedBagElement && draggedBagSourceElement) {
+                const tankRect = tank.getBoundingClientRect();
+                if (e.clientX >= tankRect.left && e.clientX <= tankRect.right &&
+                    e.clientY >= tankRect.top && e.clientY <= tankRect.bottom) {
+                    
+                    const dropX = e.clientX - tankRect.left - offsetX;
+                    const dropY = e.clientY - tankRect.top - offsetY;
+                    
+                    // Fisch aus Beutel freigeben
+                    const itemType = draggedBagSourceElement.getAttribute('data-item-type');
+                    const itemPrice = parseFloat(draggedBagSourceElement.getAttribute('data-item-price'));
+                    const itemSize = parseFloat(draggedBagSourceElement.getAttribute('data-item-size'));
+                    const itemHue = parseInt(draggedBagSourceElement.getAttribute('data-item-hue'));
+                    
+                    // SVG aus dem Beutel klonen
+                    const svgInBag = draggedBagSourceElement.querySelector('svg');
+                    const itemSvg = svgInBag ? svgInBag.outerHTML : '';
+                    
+                    if (itemType === 'eel') {
+                        // Röhrenaal wieder ins Aquarium
+                        const eel = new GardenEel();
+                        eel.x = dropX;
+                        eel.y = dropY;
+                    } else {
+                        // Normaler Fisch/Tier wieder ins Aquarium
+                        const releasedItem = spawnItem(itemType, dropX, dropY, itemSvg, itemPrice, itemHue);
+                        releasedItem.sizeMultiplier = itemSize;
+                        releasedItem.currentPrice = itemPrice;
+                        releasedItem.svgElement.style.transform = `scale(${itemSize})`;
+                        if (itemHue > 0) {
+                            releasedItem.svgElement.style.filter = `hue-rotate(${itemHue}deg)`;
+                        }
+                    }
+                    
+                    // Beutel aus Inventar entfernen
+                    draggedBagSourceElement.remove();
+                    currentInventoryValue -= itemPrice;
+                    updateUI();
+                    
+                    if (inventoryArea.querySelectorAll('.plastic-bag').length === 0) {
+                        emptyInventoryText.style.display = 'block';
+                    }
+                }
+            }
+            cancelDragBag();
+        }
+
 
         function startDrag(e) {
             if (aquariumItems.length >= MAX_AQUARIUM_ITEMS) return; // Wenn Limit erreicht, Drag komplett verbieten
@@ -1073,7 +1240,7 @@
                 this.lastGrowthTime = 0; 
                 this.lastBreedTime = Date.now(); 
                 
-                this.isAnimal = (['clownfish', 'bluetang', 'goldfish', 'angelfish', 'shrimp'].includes(type));
+                this.isAnimal = (['clownfish', 'bluetang', 'goldfish', 'angelfish', 'shrimp', 'pufferfish'].includes(type));
                 this.isClam = (type === 'clam');
                 this.isStarfish = (type === 'starfish');
                 this.isPlant = (['plant', 'redplant', 'seagrass', 'flowerplant'].includes(type)); 
