@@ -6,8 +6,16 @@
     <title>Jontes Aquariumspiel</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <style>
+        /* Verhindert Pull-to-Refresh auf mobilen Geräten komplett */
+        body {
+            position: fixed;
+            inset: 0;
+            touch-action: none; 
+        }
+
         .draggable {
-            touch-action: none;
+            /* Erlaubt seitliches Scrollen, fängt aber vertikales Ziehen ab */
+            touch-action: pan-x;
             cursor: grab;
         }
         .draggable:active {
@@ -19,6 +27,7 @@
             overflow: hidden;
             background: linear-gradient(180deg, #4fd1c5 0%, #2b6cb0 100%);
             box-shadow: inset 0 0 20px rgba(0,0,0,0.3);
+            touch-action: none; /* Verhindert Scrollen beim Kescher/Schwamm-Nutzen */
         }
 
         .cursor-net {
@@ -28,6 +37,15 @@
         /* Vergrößerter Schwamm-Cursor */
         .cursor-sponge {
             cursor: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='100' height='100' viewBox='0 0 100 100'%3E%3Crect x='10' y='20' width='80' height='60' rx='10' fill='%23fef08a' stroke='%23a16207' stroke-width='4'/%3E%3Ccircle cx='30' cy='40' r='6' fill='%23a16207' opacity='0.3'/%3E%3Ccircle cx='70' cy='50' r='8' fill='%23a16207' opacity='0.3'/%3E%3Ccircle cx='45' cy='65' r='5' fill='%23a16207' opacity='0.3'/%3E%3Ccircle cx='80' cy='30' r='4' fill='%23a16207' opacity='0.3'/%3E%3C/svg%3E") 50 50, pointer !important;
+        }
+
+        /* Unsichtbare Scrollbar für ein sauberes Design auf Mobile, scrollen geht trotzdem */
+        .hide-scrollbar::-webkit-scrollbar {
+            display: none;
+        }
+        .hide-scrollbar {
+            -ms-overflow-style: none;
+            scrollbar-width: none;
         }
 
         .bubble {
@@ -79,19 +97,29 @@
             z-index: 15;
         }
 
+        /* Responsive Plastikbeutel */
         .plastic-bag {
             position: relative;
             background: rgba(224, 242, 254, 0.5);
             border: 1px solid #7dd3fc;
             border-radius: 0.5rem 0.5rem 1rem 1rem;
             box-shadow: inset 0 0 15px rgba(255, 255, 255, 0.9);
-            width: 80px;
-            height: 80px;
             display: flex;
             align-items: center;
             justify-content: center;
             flex-shrink: 0;
+            width: 60px;
+            height: 60px;
         }
+        @media (min-width: 768px) {
+            .plastic-bag { width: 80px; height: 80px; }
+        }
+        
+        .plastic-bag svg {
+            max-width: 80%;
+            max-height: 80%;
+        }
+
         .plastic-bag::before {
             content: '';
             position: absolute;
@@ -118,25 +146,27 @@
         }
     </style>
 </head>
-<body class="bg-gray-100 h-screen flex flex-col overflow-hidden select-none">
+<body class="bg-gray-100 flex flex-col overflow-hidden select-none">
 
-    <header class="bg-blue-800 text-white p-4 shadow-md z-10 flex justify-between items-center">
+    <!-- HEADER -->
+    <header class="bg-blue-800 text-white p-2 md:p-4 shadow-md z-10 flex justify-between items-center shrink-0">
         <div>
-            <h1 class="text-3xl font-bold">Jontes Aquariumspiel</h1>
+            <h1 class="text-lg md:text-3xl font-bold truncate">Jontes Aquarium</h1>
         </div>
-        <div class="bg-blue-900 px-4 py-2 rounded-lg border-2 border-blue-400 text-center">
-            <span class="text-sm text-blue-200 block uppercase font-bold tracking-wider">Guthaben</span>
-            <span id="budget-display" class="text-2xl font-bold text-green-400">20,00 €</span>
+        <div class="bg-blue-900 px-3 md:px-4 py-1 md:py-2 rounded-lg border-2 border-blue-400 text-center shrink-0">
+            <span class="text-[10px] md:text-sm text-blue-200 block uppercase font-bold tracking-wider">Guthaben</span>
+            <span id="budget-display" class="text-base md:text-2xl font-bold text-green-400">20,00 €</span>
         </div>
     </header>
 
+    <!-- AQUARIUM -->
     <main id="aquarium-tank" class="flex-grow w-full border-b-8 border-yellow-700/50">
         <!-- Event Banner -->
-        <div id="event-banner" class="absolute top-4 left-1/2 transform -translate-x-1/2 bg-red-500 text-white px-6 py-2 rounded-full font-bold shadow-lg z-50 hidden items-center gap-2 transition-opacity duration-500 opacity-0">
+        <div id="event-banner" class="absolute top-4 left-1/2 transform -translate-x-1/2 bg-red-500 text-white px-4 md:px-6 py-1 md:py-2 rounded-full font-bold shadow-lg z-50 hidden items-center gap-2 transition-opacity duration-500 opacity-0 text-xs md:text-base whitespace-nowrap">
             <span id="event-banner-text">🎉 Event: Fische stark reduziert!</span>
         </div>
 
-        <!-- Canvas für Algenstruktur (klick-durchlässig) -->
+        <!-- Canvas für Algenstruktur -->
         <canvas id="algae-canvas" class="absolute top-0 left-0 w-full h-full pointer-events-none z-[18] opacity-80 mix-blend-multiply"></canvas>
 
         <!-- Hinterer Sand (Tiefe) -->
@@ -144,58 +174,60 @@
         <div class="absolute bottom-0 w-full h-12 bg-yellow-500/90 rounded-t-xl z-10" style="clip-path: polygon(0% 20%, 20% 0%, 40% 15%, 60% 0%, 80% 20%, 100% 5%, 100% 100%, 0% 100%);"></div>
     </main>
 
-    <div class="bg-blue-50/80 h-32 border-b-2 border-gray-300 p-2 flex gap-4 shadow-inner relative z-20">
-        <div id="inventory-area" class="flex-grow flex gap-4 overflow-x-auto items-center h-full pr-40">
-            <div id="empty-inventory-text" class="w-full text-center text-gray-400 italic text-sm">
+    <!-- INVENTAR / VERKAUF -->
+    <div class="bg-blue-50/80 h-20 md:h-32 border-b-2 border-gray-300 p-2 flex gap-2 md:gap-4 shadow-inner relative z-20 shrink-0">
+        <div id="inventory-area" class="flex-grow flex gap-2 md:gap-4 overflow-x-auto items-center h-full pr-24 md:pr-40 hide-scrollbar">
+            <div id="empty-inventory-text" class="w-full text-center text-gray-400 italic text-[10px] md:text-sm">
                 Mit dem Kescher gefangene Fische landen in Plastikbeuteln hier.
             </div>
         </div>
         
-        <div class="absolute right-2 top-2 bottom-2 w-36 bg-white border-2 border-green-200 rounded-lg shadow flex flex-col justify-center items-center p-2 z-10">
-            <span class="text-xs text-gray-500 font-bold">Gesamtwert:</span>
-            <span id="inventory-value-display" class="text-lg font-bold text-green-700 mb-2">0,00 €</span>
-            <button id="sell-btn" class="bg-green-500 hover:bg-green-600 text-white text-sm font-bold py-1 px-3 rounded shadow transition-colors disabled:opacity-50 disabled:cursor-not-allowed" disabled>
+        <div class="absolute right-2 top-2 bottom-2 w-20 md:w-36 bg-white border-2 border-green-200 rounded-lg shadow flex flex-col justify-center items-center p-1 md:p-2 z-10">
+            <span class="text-[10px] md:text-xs text-gray-500 font-bold">Wert:</span>
+            <span id="inventory-value-display" class="text-sm md:text-lg font-bold text-green-700 mb-1 md:mb-2">0,00 €</span>
+            <button id="sell-btn" class="bg-green-500 hover:bg-green-600 text-white text-[10px] md:text-sm font-bold py-1 px-1 md:px-3 rounded shadow transition-colors disabled:opacity-50 disabled:cursor-not-allowed w-full" disabled>
                 Verkaufen
             </button>
         </div>
     </div>
 
-    <footer class="bg-white p-3 shadow-[0_-4px_6px_-1px_rgba(0,0,0,0.1)] z-20 flex gap-6 items-start overflow-x-auto">
+    <!-- WERKZEUGE & SHOP -->
+    <footer class="bg-white px-2 py-2 md:p-3 shadow-[0_-4px_6px_-1px_rgba(0,0,0,0.1)] z-20 flex gap-4 md:gap-6 items-start overflow-x-auto hide-scrollbar shrink-0">
         
-        <div class="flex gap-4 border-r-2 border-gray-200 pr-6 shrink-0 items-center">
+        <div class="flex gap-2 md:gap-4 border-r-2 border-gray-200 pr-4 md:pr-6 shrink-0 items-center">
             <div id="fish-food-btn" class="cursor-pointer transition-transform hover:scale-110 flex flex-col items-center">
-                <svg width="40" height="50" viewBox="0 0 40 50" xmlns="http://www.w3.org/2000/svg">
+                <svg class="h-[35px] md:h-[50px] w-auto shrink-0" width="40" height="50" viewBox="0 0 40 50" xmlns="http://www.w3.org/2000/svg">
                     <rect x="5" y="10" width="30" height="40" fill="#facc15" stroke="#ca8a04" stroke-width="2" rx="4"/>
                     <rect x="0" y="5" width="40" height="8" fill="#eab308" stroke="#ca8a04" stroke-width="2" rx="2"/>
                 </svg>
-                <span class="text-xs text-yellow-700 mt-1 font-bold text-center">Füttern<br>(0,20 €)</span>
+                <span class="text-[10px] md:text-xs text-yellow-700 mt-1 font-bold text-center leading-tight">Füttern<br>(0,20 €)</span>
             </div>
 
-            <div id="net-btn" class="cursor-pointer transition-transform hover:scale-110 flex flex-col items-center p-2 rounded-lg">
-                <svg width="40" height="50" viewBox="0 0 50 60" xmlns="http://www.w3.org/2000/svg">
+            <div id="net-btn" class="cursor-pointer transition-transform hover:scale-110 flex flex-col items-center p-1 md:p-2 rounded-lg">
+                <svg class="h-[35px] md:h-[50px] w-auto shrink-0" width="50" height="60" viewBox="0 0 50 60" xmlns="http://www.w3.org/2000/svg">
                     <path d="M 25 20 C 10 20, 10 40, 25 40 C 40 40, 40 20, 25 20 Z" fill="none" stroke="#4b5563" stroke-width="4"/>
                     <path d="M 15 25 L 35 35 M 15 35 L 35 25 M 20 20 L 20 40 M 30 20 L 30 40" stroke="#9ca3af" stroke-width="1"/>
                     <path d="M 25 40 L 25 60" stroke="#8b5cf6" stroke-width="4" stroke-linecap="round"/>
                 </svg>
-                <span class="text-xs text-purple-700 mt-1 font-bold">Kescher</span>
+                <span class="text-[10px] md:text-xs text-purple-700 mt-1 font-bold leading-tight">Kescher</span>
             </div>
 
-            <div id="sponge-btn" class="cursor-pointer transition-transform hover:scale-110 flex flex-col items-center p-2 rounded-lg">
-                <svg width="40" height="50" viewBox="0 0 40 50" xmlns="http://www.w3.org/2000/svg">
+            <div id="sponge-btn" class="cursor-pointer transition-transform hover:scale-110 flex flex-col items-center p-1 md:p-2 rounded-lg">
+                <svg class="h-[35px] md:h-[50px] w-auto shrink-0" width="40" height="50" viewBox="0 0 40 50" xmlns="http://www.w3.org/2000/svg">
                     <rect x="5" y="15" width="30" height="20" rx="4" fill="#fef08a" stroke="#a16207" stroke-width="2"/>
                     <circle cx="12" cy="20" r="2" fill="#a16207" opacity="0.3"/>
                     <circle cx="25" cy="28" r="3" fill="#a16207" opacity="0.3"/>
                     <circle cx="15" cy="30" r="1.5" fill="#a16207" opacity="0.3"/>
                     <circle cx="28" cy="18" r="2" fill="#a16207" opacity="0.3"/>
                 </svg>
-                <span class="text-xs text-yellow-700 mt-1 font-bold">Schwamm</span>
+                <span class="text-[10px] md:text-xs text-yellow-700 mt-1 font-bold leading-tight">Schwamm</span>
             </div>
         </div>
 
-        <div class="flex gap-4 shrink-0">
+        <div class="flex gap-3 md:gap-4 shrink-0 items-end">
             <div class="flex flex-col items-center">
-                <div class="draggable transition-transform hover:scale-110 h-[50px] flex items-center" data-type="clownfish" data-price="2.00" data-event-hue="0">
-                    <svg width="50" height="35" viewBox="0 0 100 60" xmlns="http://www.w3.org/2000/svg">
+                <div class="draggable transition-transform hover:scale-110 flex items-center h-[35px] md:h-[50px] shrink-0" data-type="clownfish" data-price="2.00" data-event-hue="0">
+                    <svg class="h-full w-auto" width="100" height="60" viewBox="0 0 100 60" xmlns="http://www.w3.org/2000/svg">
                         <path d="M 80 30 L 100 10 L 95 30 L 100 50 Z" fill="#ff7b00" stroke="#000" stroke-width="2"/>
                         <ellipse cx="50" cy="30" rx="35" ry="20" fill="#ff7b00" stroke="#000" stroke-width="2"/>
                         <path d="M 35 12 Q 40 30 35 48" fill="none" stroke="#fff" stroke-width="6"/>
@@ -204,12 +236,12 @@
                         <circle cx="24" cy="25" r="2" fill="#000"/>
                     </svg>
                 </div>
-                <span class="text-xs font-bold text-gray-700">2,00 €</span>
+                <span class="text-[10px] md:text-xs font-bold text-gray-700 mt-1">2,00 €</span>
             </div>
 
             <div class="flex flex-col items-center">
-                <div class="draggable transition-transform hover:scale-110 h-[50px] flex items-center" data-type="bluetang" data-price="5.50" data-event-hue="0">
-                    <svg width="60" height="40" viewBox="0 0 120 70" xmlns="http://www.w3.org/2000/svg">
+                <div class="draggable transition-transform hover:scale-110 flex items-center h-[35px] md:h-[50px] shrink-0" data-type="bluetang" data-price="5.50" data-event-hue="0">
+                    <svg class="h-full w-auto" width="120" height="70" viewBox="0 0 120 70" xmlns="http://www.w3.org/2000/svg">
                         <path d="M 90 35 L 120 15 L 115 35 L 120 55 Z" fill="#ffd700" stroke="#000" stroke-width="2"/>
                         <path d="M 10 35 C 10 10, 50 5, 95 25 C 95 45, 50 65, 10 35 Z" fill="#0044ff" stroke="#000" stroke-width="2"/>
                         <path d="M 30 20 C 50 15, 80 20, 90 35 C 80 40, 50 35, 30 20 Z" fill="#000"/>
@@ -217,24 +249,24 @@
                         <circle cx="23" cy="30" r="2" fill="#000"/>
                     </svg>
                 </div>
-                <span class="text-xs font-bold text-gray-700">5,50 €</span>
+                <span class="text-[10px] md:text-xs font-bold text-gray-700 mt-1">5,50 €</span>
             </div>
 
             <div class="flex flex-col items-center">
-                <div class="draggable transition-transform hover:scale-110 h-[50px] flex items-center" data-type="goldfish" data-price="1.50" data-event-hue="0">
-                    <svg width="50" height="35" viewBox="0 0 100 70" xmlns="http://www.w3.org/2000/svg">
+                <div class="draggable transition-transform hover:scale-110 flex items-center h-[35px] md:h-[50px] shrink-0" data-type="goldfish" data-price="1.50" data-event-hue="0">
+                    <svg class="h-full w-auto" width="100" height="70" viewBox="0 0 100 70" xmlns="http://www.w3.org/2000/svg">
                         <path d="M 75 35 Q 100 10 100 35 Q 100 60 75 35 Z" fill="#f97316" stroke="#c2410c" stroke-width="2"/>
                         <ellipse cx="45" cy="35" rx="35" ry="25" fill="#f97316" stroke="#c2410c" stroke-width="2"/>
                         <circle cx="20" cy="30" r="5" fill="#fff" stroke="#000" stroke-width="1"/>
                         <circle cx="18" cy="30" r="2.5" fill="#000"/>
                     </svg>
                 </div>
-                <span class="text-xs font-bold text-gray-700">1,50 €</span>
+                <span class="text-[10px] md:text-xs font-bold text-gray-700 mt-1">1,50 €</span>
             </div>
 
             <div class="flex flex-col items-center">
-                <div class="draggable transition-transform hover:scale-110 h-[50px] flex items-center" data-type="angelfish" data-price="8.00" data-event-hue="0">
-                    <svg width="40" height="45" viewBox="0 0 80 100" xmlns="http://www.w3.org/2000/svg">
+                <div class="draggable transition-transform hover:scale-110 flex items-center h-[35px] md:h-[50px] shrink-0" data-type="angelfish" data-price="8.00" data-event-hue="0">
+                    <svg class="h-full w-auto" width="80" height="100" viewBox="0 0 80 100" xmlns="http://www.w3.org/2000/svg">
                         <path d="M 10 50 L 70 10 L 70 90 Z" fill="#93c5fd" stroke="#2563eb" stroke-width="2"/>
                         <path d="M 30 40 L 30 60" stroke="#1e3a8a" stroke-width="4"/>
                         <path d="M 50 25 L 50 75" stroke="#1e3a8a" stroke-width="4"/>
@@ -242,12 +274,12 @@
                         <circle cx="25" cy="50" r="3" fill="#fff" stroke="#000" stroke-width="1"/>
                     </svg>
                 </div>
-                <span class="text-xs font-bold text-gray-700">8,00 €</span>
+                <span class="text-[10px] md:text-xs font-bold text-gray-700 mt-1">8,00 €</span>
             </div>
 
             <div class="flex flex-col items-center">
-                <div class="draggable transition-transform hover:scale-110 h-[50px] flex items-center" data-type="shrimp" data-price="3.50" data-event-hue="0">
-                    <svg width="45" height="35" viewBox="0 0 60 50" xmlns="http://www.w3.org/2000/svg">
+                <div class="draggable transition-transform hover:scale-110 flex items-center h-[35px] md:h-[50px] shrink-0" data-type="shrimp" data-price="3.50" data-event-hue="0">
+                    <svg class="h-full w-auto" width="60" height="50" viewBox="0 0 60 50" xmlns="http://www.w3.org/2000/svg">
                         <path d="M 10 40 Q 20 20 40 20 Q 50 30 45 40" fill="none" stroke="#f87171" stroke-width="8" stroke-linecap="round"/>
                         <path d="M 45 40 L 55 45 L 45 50 Z" fill="#f87171"/>
                         <path d="M 25 35 L 20 45 M 30 36 L 28 48 M 35 34 L 35 48" stroke="#f87171" stroke-width="2"/>
@@ -255,38 +287,38 @@
                         <circle cx="15" cy="22" r="2" fill="#000"/>
                     </svg>
                 </div>
-                <span class="text-xs font-bold text-gray-700">3,50 €</span>
+                <span class="text-[10px] md:text-xs font-bold text-gray-700 mt-1">3,50 €</span>
             </div>
 
             <div class="flex flex-col items-center">
-                <div class="draggable transition-transform hover:scale-110 h-[50px] flex items-center" data-type="clam" data-price="12.00">
-                    <svg width="40" height="30" viewBox="0 0 50 40" xmlns="http://www.w3.org/2000/svg">
+                <div class="draggable transition-transform hover:scale-110 flex items-center h-[35px] md:h-[50px] shrink-0" data-type="clam" data-price="12.00">
+                    <svg class="h-full w-auto" width="50" height="40" viewBox="0 0 50 40" xmlns="http://www.w3.org/2000/svg">
                         <path d="M 5 35 C 0 15 20 0 45 15 C 48 30 30 40 5 35 Z" fill="#4c1d95" stroke="#312e81" stroke-width="2"/>
                         <circle cx="20" cy="25" r="5" fill="#fdf8f5"/>
                         <path d="M 5 35 C 10 20 25 15 45 25 C 42 35 20 40 5 35 Z" fill="#6d28d9" stroke="#312e81" stroke-width="2"/>
                         <path d="M 15 25 L 10 32 M 25 22 L 20 35 M 35 24 L 30 35" stroke="#312e81" stroke-width="1"/>
                     </svg>
                 </div>
-                <span class="text-xs font-bold text-gray-700">12,00 €</span>
+                <span class="text-[10px] md:text-xs font-bold text-gray-700 mt-1">12,00 €</span>
             </div>
 
             <div class="flex flex-col items-center">
-                <div class="draggable transition-transform hover:scale-110 h-[50px] flex items-center" data-type="starfish" data-price="4.50">
-                    <svg width="40" height="40" viewBox="0 0 50 50" xmlns="http://www.w3.org/2000/svg">
+                <div class="draggable transition-transform hover:scale-110 flex items-center h-[35px] md:h-[50px] shrink-0" data-type="starfish" data-price="4.50">
+                    <svg class="h-full w-auto" width="50" height="50" viewBox="0 0 50 50" xmlns="http://www.w3.org/2000/svg">
                         <path d="M 25 5 L 31 18 L 45 20 L 35 30 L 38 45 L 25 38 L 12 45 L 15 30 L 5 20 L 19 18 Z" fill="#ef4444" stroke="#b91c1c" stroke-width="2" stroke-linejoin="round"/>
                         <circle cx="20" cy="22" r="1.5" fill="#000"/>
                         <circle cx="30" cy="22" r="1.5" fill="#000"/>
                     </svg>
                 </div>
-                <span class="text-xs font-bold text-gray-700">4,50 €</span>
+                <span class="text-[10px] md:text-xs font-bold text-gray-700 mt-1">4,50 €</span>
             </div>
         </div>
 
-        <div class="flex gap-4 shrink-0 border-l-2 border-gray-200 pl-4">
+        <div class="flex gap-3 md:gap-4 shrink-0 border-l-2 border-gray-200 pl-3 md:pl-4 items-end">
             
             <div class="flex flex-col items-center">
-                <div class="draggable transition-transform hover:scale-110 h-[50px] flex items-center" data-type="flowerplant" data-price="3.00">
-                    <svg width="40" height="70" viewBox="0 0 60 100" xmlns="http://www.w3.org/2000/svg">
+                <div class="draggable transition-transform hover:scale-110 flex items-center h-[35px] md:h-[50px] shrink-0" data-type="flowerplant" data-price="3.00">
+                    <svg class="h-full w-auto" width="60" height="100" viewBox="0 0 60 100" xmlns="http://www.w3.org/2000/svg">
                         <path d="M 30 100 Q 35 60 30 20" fill="none" stroke="#166534" stroke-width="5" stroke-linecap="round"/>
                         <path d="M 30 90 Q 50 80 55 50 Q 35 60 30 90" fill="#22c55e"/>
                         <path d="M 30 75 Q 10 65 5 35 Q 25 45 30 75" fill="#4ade80"/>
@@ -300,80 +332,80 @@
                         </g>
                     </svg>
                 </div>
-                <span class="text-xs font-bold text-gray-700">3,00 €</span>
+                <span class="text-[10px] md:text-xs font-bold text-gray-700 mt-1">3,00 €</span>
             </div>
 
             <div class="flex flex-col items-center">
-                <div class="draggable transition-transform hover:scale-110 h-[50px] flex items-center" data-type="plant" data-price="2.00">
-                    <svg width="25" height="50" viewBox="0 0 40 100" xmlns="http://www.w3.org/2000/svg">
+                <div class="draggable transition-transform hover:scale-110 flex items-center h-[35px] md:h-[50px] shrink-0" data-type="plant" data-price="2.00">
+                    <svg class="h-full w-auto" width="40" height="100" viewBox="0 0 40 100" xmlns="http://www.w3.org/2000/svg">
                         <path d="M 20 100 Q 10 75 25 50 T 20 0" fill="none" stroke="#22c55e" stroke-width="8" stroke-linecap="round"/>
                     </svg>
                 </div>
-                <span class="text-xs font-bold text-gray-700">2,00 €</span>
+                <span class="text-[10px] md:text-xs font-bold text-gray-700 mt-1">2,00 €</span>
             </div>
 
             <div class="flex flex-col items-center">
-                <div class="draggable transition-transform hover:scale-110 h-[50px] flex items-center" data-type="redplant" data-price="2.50">
-                    <svg width="25" height="50" viewBox="0 0 40 100" xmlns="http://www.w3.org/2000/svg">
+                <div class="draggable transition-transform hover:scale-110 flex items-center h-[35px] md:h-[50px] shrink-0" data-type="redplant" data-price="2.50">
+                    <svg class="h-full w-auto" width="40" height="100" viewBox="0 0 40 100" xmlns="http://www.w3.org/2000/svg">
                         <path d="M 20 100 Q 0 70 20 40 T 15 0" fill="none" stroke="#be123c" stroke-width="6" stroke-linecap="round"/>
                         <path d="M 20 100 Q 40 80 20 50 T 35 15" fill="none" stroke="#e11d48" stroke-width="4" stroke-linecap="round"/>
                         <path d="M 20 100 Q 10 90 25 60 T 5 30" fill="none" stroke="#9f1239" stroke-width="5" stroke-linecap="round"/>
                     </svg>
                 </div>
-                <span class="text-xs font-bold text-gray-700">2,50 €</span>
+                <span class="text-[10px] md:text-xs font-bold text-gray-700 mt-1">2,50 €</span>
             </div>
 
             <div class="flex flex-col items-center">
-                <div class="draggable transition-transform hover:scale-110 h-[50px] flex items-center" data-type="seagrass" data-price="1.50">
-                    <svg width="25" height="50" viewBox="0 0 30 110" xmlns="http://www.w3.org/2000/svg">
+                <div class="draggable transition-transform hover:scale-110 flex items-center h-[35px] md:h-[50px] shrink-0" data-type="seagrass" data-price="1.50">
+                    <svg class="h-full w-auto" width="30" height="110" viewBox="0 0 30 110" xmlns="http://www.w3.org/2000/svg">
                         <path d="M 15 110 L 5 10" fill="none" stroke="#4ade80" stroke-width="4" stroke-linecap="round"/>
                         <path d="M 15 110 L 15 5" fill="none" stroke="#22c55e" stroke-width="5" stroke-linecap="round"/>
                         <path d="M 15 110 L 25 15" fill="none" stroke="#16a34a" stroke-width="4" stroke-linecap="round"/>
                     </svg>
                 </div>
-                <span class="text-xs font-bold text-gray-700">1,50 €</span>
+                <span class="text-[10px] md:text-xs font-bold text-gray-700 mt-1">1,50 €</span>
             </div>
             
             <div class="flex flex-col items-center">
-                <div class="draggable transition-transform hover:scale-110 h-[50px] flex items-center" data-type="stone" data-price="0.50">
-                    <svg width="40" height="30" viewBox="0 0 60 40" xmlns="http://www.w3.org/2000/svg">
+                <div class="draggable transition-transform hover:scale-110 flex items-center h-[35px] md:h-[50px] shrink-0" data-type="stone" data-price="0.50">
+                    <svg class="h-full w-auto" width="60" height="40" viewBox="0 0 60 40" xmlns="http://www.w3.org/2000/svg">
                         <path d="M 10 35 C 0 35, 0 20, 15 10 C 30 0, 50 5, 55 20 C 60 30, 50 35, 40 35 Z" fill="#78716c" stroke="#57534e" stroke-width="2"/>
                     </svg>
                 </div>
-                <span class="text-xs font-bold text-gray-700">0,50 €</span>
+                <span class="text-[10px] md:text-xs font-bold text-gray-700 mt-1">0,50 €</span>
             </div>
 
             <div class="flex flex-col items-center">
-                <div class="draggable transition-transform hover:scale-110 h-[50px] flex items-center" data-type="granite" data-price="1.00">
-                    <svg width="40" height="30" viewBox="0 0 50 45" xmlns="http://www.w3.org/2000/svg">
+                <div class="draggable transition-transform hover:scale-110 flex items-center h-[35px] md:h-[50px] shrink-0" data-type="granite" data-price="1.00">
+                    <svg class="h-full w-auto" width="50" height="45" viewBox="0 0 50 45" xmlns="http://www.w3.org/2000/svg">
                         <polygon points="10,40 0,20 15,5 35,0 50,15 45,35 30,45" fill="#4b5563" stroke="#374151" stroke-width="2"/>
                         <polygon points="15,35 10,20 20,10 35,15 40,30 25,35" fill="#6b7280"/>
                     </svg>
                 </div>
-                <span class="text-xs font-bold text-gray-700">1,00 €</span>
+                <span class="text-[10px] md:text-xs font-bold text-gray-700 mt-1">1,00 €</span>
             </div>
 
             <div class="flex flex-col items-center">
-                <div class="draggable transition-transform hover:scale-110 h-[50px] flex items-center" data-type="sandstone" data-price="0.80">
-                    <svg width="45" height="30" viewBox="0 0 80 40" xmlns="http://www.w3.org/2000/svg">
+                <div class="draggable transition-transform hover:scale-110 flex items-center h-[35px] md:h-[50px] shrink-0" data-type="sandstone" data-price="0.80">
+                    <svg class="h-full w-auto" width="80" height="40" viewBox="0 0 80 40" xmlns="http://www.w3.org/2000/svg">
                         <ellipse cx="40" cy="25" rx="35" ry="15" fill="#d97706" stroke="#b45309" stroke-width="2"/>
                         <path d="M 10 25 Q 40 15 70 25" fill="none" stroke="#b45309" stroke-width="2"/>
                         <path d="M 15 20 Q 40 10 65 20" fill="none" stroke="#f59e0b" stroke-width="2"/>
                         <ellipse cx="35" cy="15" rx="20" ry="10" fill="#f59e0b" stroke="#b45309" stroke-width="2"/>
                     </svg>
                 </div>
-                <span class="text-xs font-bold text-gray-700">0,80 €</span>
+                <span class="text-[10px] md:text-xs font-bold text-gray-700 mt-1">0,80 €</span>
             </div>
         </div>
     </footer>
 
-    <!-- Dev Tools um Funktionen erweitert -->
-    <div id="dev-panel" class="bg-gray-800 text-gray-300 p-2 text-xs flex gap-4 items-center z-30 shadow-inner overflow-x-auto shrink-0">
-        <span class="font-bold uppercase tracking-wider text-gray-500">Dev Tools:</span>
-        <button id="dev-btn-event" class="bg-gray-700 hover:bg-gray-500 text-white px-3 py-1 rounded border border-gray-600 transition-colors">Tier-Event</button>
-        <button id="dev-btn-eel" class="bg-gray-700 hover:bg-gray-500 text-white px-3 py-1 rounded border border-gray-600 transition-colors">Spawne Röhrenaal</button>
-        <button id="dev-btn-money" class="bg-gray-700 hover:bg-gray-500 text-green-400 font-bold px-3 py-1 rounded border border-gray-600 transition-colors">+ 20 €</button>
-        <button id="dev-btn-algae" class="bg-gray-700 hover:bg-gray-500 text-white px-3 py-1 rounded border border-gray-600 transition-colors">Algen spawnen</button>
+    <!-- Dev Tools -->
+    <div id="dev-panel" class="bg-gray-800 text-gray-300 p-1 md:p-2 text-[10px] md:text-xs flex gap-2 md:gap-4 items-center z-30 shadow-inner overflow-x-auto shrink-0 hide-scrollbar">
+        <span class="font-bold uppercase tracking-wider text-gray-500 whitespace-nowrap">Dev Tools:</span>
+        <button id="dev-btn-event" class="bg-gray-700 hover:bg-gray-500 text-white px-2 md:px-3 py-1 rounded border border-gray-600 transition-colors whitespace-nowrap">Tier-Event</button>
+        <button id="dev-btn-eel" class="bg-gray-700 hover:bg-gray-500 text-white px-2 md:px-3 py-1 rounded border border-gray-600 transition-colors whitespace-nowrap">Röhrenaal</button>
+        <button id="dev-btn-money" class="bg-gray-700 hover:bg-gray-500 text-green-400 font-bold px-2 md:px-3 py-1 rounded border border-gray-600 transition-colors whitespace-nowrap">+ 20 €</button>
+        <button id="dev-btn-algae" class="bg-gray-700 hover:bg-gray-500 text-white px-2 md:px-3 py-1 rounded border border-gray-600 transition-colors whitespace-nowrap">Algen spawnen</button>
     </div>
 
     <script>
@@ -392,7 +424,6 @@
         const algaeCtx = algaeCanvas.getContext('2d');
         
         function resizeAlgaeCanvas() {
-            // Speichere den aktuellen Zustand um ihn nicht beim Resize zu verlieren
             const tempCanvas = document.createElement('canvas');
             tempCanvas.width = algaeCanvas.width;
             tempCanvas.height = algaeCanvas.height;
@@ -412,7 +443,6 @@
             }
         }
         window.addEventListener('resize', resizeAlgaeCanvas);
-        // Initialer Aufruf nach kurzem Warten für korrekte Tank-Dimensionen
         setTimeout(resizeAlgaeCanvas, 100);
 
         const aquariumItems = [];
@@ -434,13 +464,11 @@
 
         function drawAlgaePatch(x, y) {
             algaeCtx.save();
-            // Erzeuge ein Cluster aus leicht unterschiedlichen Kreisen für organisches Wachstum
             for(let i = 0; i < 20; i++) {
                 const ox = x + (Math.random() - 0.5) * 100;
                 const oy = y + (Math.random() - 0.5) * 100;
                 const radius = Math.random() * 25 + 10;
                 
-                // Grüntöne mit etwas Braun für realistische Algen
                 const r = 20 + Math.random() * 30;
                 const g = 80 + Math.random() * 60;
                 const b = 20 + Math.random() * 20;
@@ -486,7 +514,7 @@
 
             const banner = document.getElementById('event-banner');
             if (banner) {
-                document.getElementById('event-banner-text').innerText = `🎉 Event: Bunte ${animalNames[activeEventType]} stark reduziert!`;
+                document.getElementById('event-banner-text').innerText = `🎉 Event: Bunte ${animalNames[activeEventType]} reduziert!`;
                 banner.classList.remove('hidden');
                 banner.classList.add('flex');
                 
@@ -568,7 +596,6 @@
             updateUI();
         });
         if (devBtnAlgae) devBtnAlgae.addEventListener('click', () => {
-            // Spawnt zufällig Algen an verschiedenen Stellen
             for(let i=0; i<6; i++) {
                 drawAlgaePatch(Math.random() * algaeCanvas.width, Math.random() * algaeCanvas.height);
             }
@@ -621,7 +648,6 @@
             }
         });
 
-        // Wisch-Mechanik auf dem Canvas (Radiergummi)
         tank.addEventListener('pointerdown', (e) => {
             if (isSpongeActive) isWiping = true;
         });
@@ -638,15 +664,14 @@
 
                 algaeCtx.globalCompositeOperation = 'destination-out';
                 algaeCtx.beginPath();
-                algaeCtx.arc(x, y, 60, 0, Math.PI * 2); // 120px Durchmesser für den großen Schwamm
+                algaeCtx.arc(x, y, 60, 0, Math.PI * 2); 
                 algaeCtx.fill();
-                algaeCtx.globalCompositeOperation = 'source-over'; // Zurücksetzen für zukünftiges Zeichnen
+                algaeCtx.globalCompositeOperation = 'source-over'; 
                 
                 lastAlgaeCleanTime = Date.now();
             }
         });
 
-        // Kescher-Fangen Mechanik
         tank.addEventListener('click', (e) => {
             if (!isNetActive) return;
 
@@ -655,8 +680,8 @@
             const clickY = e.clientY - rect.top;
 
             if (currentEel && currentEel.state !== 'hiding') {
-                const centerX = currentEel.x + 12;
-                const centerY = currentEel.y + 30; 
+                const centerX = currentEel.x + 30; 
+                const centerY = currentEel.y + 50; 
                 const dx = clickX - centerX;
                 const dy = clickY - centerY;
                 if (Math.sqrt(dx * dx + dy * dy) < 40) {
@@ -690,7 +715,7 @@
             emptyInventoryText.style.display = 'none';
 
             const bagDiv = document.createElement('div');
-            bagDiv.className = 'plastic-bag flex flex-col items-center justify-center shrink-0';
+            bagDiv.className = 'plastic-bag';
             
             const svgClone = item.svgElement.cloneNode(true);
             svgClone.style.transform = `scale(${item.sizeMultiplier})`;
@@ -702,7 +727,7 @@
             }
 
             const priceTag = document.createElement('div');
-            priceTag.className = 'absolute bottom-1 bg-white px-2 py-0.5 rounded text-[10px] font-bold text-green-700 shadow-sm z-10';
+            priceTag.className = 'absolute bottom-1 bg-white px-2 py-0.5 rounded text-[10px] md:text-xs font-bold text-green-700 shadow-sm z-10';
             priceTag.innerText = formatCurrency(item.currentPrice);
             bagDiv.appendChild(priceTag);
 
@@ -719,7 +744,7 @@
             emptyInventoryText.style.display = 'none';
 
             const bagDiv = document.createElement('div');
-            bagDiv.className = 'plastic-bag flex flex-col items-center justify-center shrink-0';
+            bagDiv.className = 'plastic-bag';
             
             const svgClone = eel.svgElement.cloneNode(true);
             svgClone.style.transform = 'scale(0.6)'; 
@@ -727,7 +752,7 @@
             bagDiv.appendChild(svgClone);
 
             const priceTag = document.createElement('div');
-            priceTag.className = 'absolute bottom-1 bg-white px-2 py-0.5 rounded text-[10px] font-bold text-green-700 shadow-sm z-10';
+            priceTag.className = 'absolute bottom-1 bg-white px-2 py-0.5 rounded text-[10px] md:text-xs font-bold text-green-700 shadow-sm z-10';
             priceTag.innerText = formatCurrency(1.00); 
             bagDiv.appendChild(priceTag);
 
@@ -827,74 +852,107 @@
             }
         });
 
+        // --- Drag and Drop Logik mit Toleranz für Scrollen ---
+        let potentialDragElement = null;
+        let dragStartX = 0;
+        let dragStartY = 0;
+        let isDragging = false;
+
         draggables.forEach(item => {
             item.addEventListener('pointerdown', startDrag);
         });
 
         function startDrag(e) {
             disableTools();
+            potentialDragElement = e.currentTarget;
+            dragStartX = e.clientX;
+            dragStartY = e.clientY;
             
-            e.preventDefault();
+            currentBasePrice = parseFloat(potentialDragElement.dataset.price);
+            currentType = potentialDragElement.dataset.type;
+            currentEventHue = potentialDragElement.dataset.eventHue ? parseInt(potentialDragElement.dataset.eventHue) : 0;
             
-            const originalElement = e.currentTarget;
-            currentBasePrice = parseFloat(originalElement.dataset.price);
-
-            if (budget < currentBasePrice) {
-                originalElement.classList.add('bg-red-200', 'rounded', 'transition-colors', 'duration-300');
-                setTimeout(() => originalElement.classList.remove('bg-red-200', 'rounded', 'transition-colors', 'duration-300'), 300);
-                return;
-            }
-            
-            currentType = originalElement.dataset.type;
-            currentEventHue = originalElement.dataset.eventHue ? parseInt(originalElement.dataset.eventHue) : 0;
-            
-            draggedElement = originalElement.cloneNode(true);
-            draggedElement.style.position = 'fixed';
-            draggedElement.style.pointerEvents = 'none';
-            draggedElement.style.zIndex = '9999';
-            draggedElement.classList.remove('hover:scale-110');
-            
-            document.body.appendChild(draggedElement);
-            
-            const rect = originalElement.getBoundingClientRect();
-            offsetX = rect.width / 2;
-            offsetY = rect.height / 2;
-            
-            moveDrag(e);
-            document.addEventListener('pointermove', moveDrag);
+            document.addEventListener('pointermove', moveDrag, { passive: false });
             document.addEventListener('pointerup', endDrag);
+            document.addEventListener('pointercancel', cancelDrag);
         }
 
         function moveDrag(e) {
-            if (!draggedElement) return;
-            draggedElement.style.left = `${e.clientX - offsetX}px`;
-            draggedElement.style.top = `${e.clientY - offsetY}px`;
+            if (!isDragging && potentialDragElement) {
+                const dx = e.clientX - dragStartX;
+                const dy = e.clientY - dragStartY;
+                
+                if (Math.abs(dx) > 10 || Math.abs(dy) > 10) {
+                    if (Math.abs(dx) > Math.abs(dy) * 1.5) {
+                        cancelDrag();
+                        return;
+                    }
+                    
+                    isDragging = true;
+                    
+                    if (budget < currentBasePrice) {
+                        // FIX: Wir merken uns das HTML-Element, bevor drag abgebrochen wird!
+                        const flashElement = potentialDragElement;
+                        flashElement.classList.add('bg-red-200', 'rounded', 'transition-colors', 'duration-300');
+                        setTimeout(() => flashElement.classList.remove('bg-red-200', 'rounded', 'transition-colors', 'duration-300'), 300);
+                        cancelDrag();
+                        return;
+                    }
+
+                    draggedElement = potentialDragElement.cloneNode(true);
+                    draggedElement.style.position = 'fixed';
+                    draggedElement.style.pointerEvents = 'none';
+                    draggedElement.style.zIndex = '9999';
+                    draggedElement.classList.remove('hover:scale-110');
+                    
+                    // Sicherstellen, dass das gezogene Element die richtige Größe behält
+                    const rect = potentialDragElement.getBoundingClientRect();
+                    draggedElement.style.width = `${rect.width}px`;
+                    draggedElement.style.height = `${rect.height}px`;
+
+                    document.body.appendChild(draggedElement);
+                    
+                    offsetX = rect.width / 2;
+                    offsetY = rect.height / 2;
+                }
+            }
+
+            if (isDragging && draggedElement) {
+                e.preventDefault(); 
+                draggedElement.style.left = `${e.clientX - offsetX}px`;
+                draggedElement.style.top = `${e.clientY - offsetY}px`;
+            }
+        }
+
+        function cancelDrag() {
+            potentialDragElement = null;
+            isDragging = false;
+            if (draggedElement) {
+                draggedElement.remove();
+                draggedElement = null;
+            }
+            document.removeEventListener('pointermove', moveDrag);
+            document.removeEventListener('pointerup', endDrag);
+            document.removeEventListener('pointercancel', cancelDrag);
         }
 
         function endDrag(e) {
-            if (!draggedElement) return;
+            if (isDragging && draggedElement) {
+                const tankRect = tank.getBoundingClientRect();
+                if (e.clientX >= tankRect.left && e.clientX <= tankRect.right &&
+                    e.clientY >= tankRect.top && e.clientY <= tankRect.bottom) {
+                    
+                    const dropX = e.clientX - tankRect.left - offsetX;
+                    const dropY = e.clientY - tankRect.top - offsetY;
+                    
+                    budget -= currentBasePrice;
+                    updateUI();
 
-            const tankRect = tank.getBoundingClientRect();
-            if (e.clientX >= tankRect.left && e.clientX <= tankRect.right &&
-                e.clientY >= tankRect.top && e.clientY <= tankRect.bottom) {
-                
-                const dropX = e.clientX - tankRect.left - offsetX;
-                const dropY = e.clientY - tankRect.top - offsetY;
-                
-                budget -= currentBasePrice;
-                updateUI();
-
-                const svgContent = draggedElement.querySelector('svg').outerHTML;
-                spawnItem(currentType, dropX, dropY, svgContent, currentBasePrice, currentEventHue);
+                    const svgContent = draggedElement.querySelector('svg').outerHTML;
+                    spawnItem(currentType, dropX, dropY, svgContent, currentBasePrice, currentEventHue);
+                }
             }
-
-            draggedElement.remove();
-            draggedElement = null;
-            currentType = null;
-            currentEventHue = 0;
-            
-            document.removeEventListener('pointermove', moveDrag);
-            document.removeEventListener('pointerup', endDrag);
+            cancelDrag();
         }
 
         class GardenEel {
@@ -911,18 +969,9 @@
                 this.element = document.createElement('div');
                 this.element.className = 'absolute';
                 this.element.style.zIndex = '5'; 
-                this.element.style.transformOrigin = 'bottom center';
                 
                 this.element.innerHTML = `
-                    <svg width="24" height="100" viewBox="0 0 24 100" style="transform-origin: bottom center;">
-                        <path d="M 6 100 L 6 20 Q 6 5 12 5 Q 18 5 18 20 L 18 100 Z" fill="#d1d5db" stroke="#9ca3af" stroke-width="2"/>
-                        <circle cx="12" cy="30" r="2" fill="#4b5563" />
-                        <circle cx="12" cy="50" r="2" fill="#4b5563" />
-                        <circle cx="12" cy="70" r="2" fill="#4b5563" />
-                        <circle cx="8" cy="12" r="2.5" fill="#000" />
-                        <circle cx="16" cy="12" r="2.5" fill="#000" />
-                        <path d="M 10 18 Q 12 20 14 18" fill="none" stroke="#000" stroke-width="1.5"/>
-                    </svg>
+                    <svg width="60" height="100" viewBox="0 0 60 100" style="overflow: visible;"></svg>
                 `;
                 this.svgElement = this.element.querySelector('svg');
                 tank.appendChild(this.element);
@@ -968,7 +1017,28 @@
 
             updateTransform() {
                 this.element.style.transform = `translate(${this.x}px, ${this.y}px)`;
-                this.svgElement.style.transform = `rotate(${this.currentAngle}deg)`;
+                
+                // Mathematik für die Bewegung des oberen Teils
+                let rad = this.currentAngle * Math.PI / 180;
+                let neckLength = 45;
+                let hX = 30 + Math.sin(rad) * neckLength;
+                let hY = 70 - Math.cos(rad) * neckLength;
+
+                this.svgElement.innerHTML = `
+                    <!-- Sandloch -->
+                    <ellipse cx="30" cy="100" rx="14" ry="4" fill="#374151" opacity="0.6"/>
+                    <!-- Körper bleibt bis Y=70 starr und biegt sich dann erst oben durch eine Bezier-Kurve -->
+                    <path d="M 24 100 L 24 70 Q 24 50 ${hX - 5} ${hY} A 5 5 0 0 1 ${hX + 5} ${hY} Q 36 50 36 70 L 36 100 Z" fill="#d1d5db" stroke="#9ca3af" stroke-width="2"/>
+                    <!-- Punkte auf dem Rücken -->
+                    <circle cx="30" cy="85" r="2" fill="#4b5563" />
+                    <circle cx="${30 + (hX - 30) * 0.2}" cy="${70 + (hY - 70) * 0.2}" r="2" fill="#4b5563" />
+                    <circle cx="${30 + (hX - 30) * 0.7}" cy="${70 + (hY - 70) * 0.7}" r="2" fill="#4b5563" />
+                    <!-- Augen -->
+                    <circle cx="${hX - 4}" cy="${hY - 3}" r="2.5" fill="#000" />
+                    <circle cx="${hX + 4}" cy="${hY - 3}" r="2.5" fill="#000" />
+                    <!-- Mund -->
+                    <path d="M ${hX - 2} ${hY + 3} Q ${hX} ${hY + 6} ${hX + 2} ${hY + 3}" fill="none" stroke="#000" stroke-width="1.5"/>
+                `;
             }
         }
 
@@ -1001,6 +1071,9 @@
                 this.element.className = 'tank-item';
                 this.element.innerHTML = svgContent;
                 this.svgElement = this.element.querySelector('svg');
+                
+                // SVG-Styling aus der mobilen Leiste zurücksetzen, damit es normal skaliert
+                this.svgElement.classList.remove('h-full', 'w-auto');
                 
                 if (this.hueRotate > 0) {
                     this.svgElement.style.filter = `hue-rotate(${this.hueRotate}deg)`;
@@ -1338,8 +1411,8 @@
         }
 
         function gameLoop() {
-            // Algenwachstum per Zufall (etwa einmal pro Sekunde eine neue Struktur)
-            if (Date.now() - lastAlgaeCleanTime > 30000) { 
+            // Nach 60 Sekunden beginnen die Algen langsam zu wachsen
+            if (Date.now() - lastAlgaeCleanTime > 60000) { 
                 if (Math.random() < 0.02) { 
                     drawAlgaePatch(Math.random() * algaeCanvas.width, Math.random() * algaeCanvas.height);
                 }
