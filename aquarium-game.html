@@ -194,7 +194,8 @@
     <!-- WERKZEUGE & SHOP -->
     <footer class="bg-white px-2 py-2 md:p-3 shadow-[0_-4px_6px_-1px_rgba(0,0,0,0.1)] z-20 flex gap-4 md:gap-6 items-start overflow-x-auto hide-scrollbar shrink-0">
         
-        <div class="flex gap-2 md:gap-4 border-r-2 border-gray-200 pr-4 md:pr-6 shrink-0 items-center">
+        <!-- WERKZEUGE: Nicht vom Limit blockiert -->
+        <div class="flex gap-2 md:gap-4 border-r-2 border-gray-200 pr-4 md:pr-6 shrink-0 items-center h-full relative z-40">
             <div id="fish-food-btn" class="cursor-pointer transition-transform hover:scale-110 flex flex-col items-center">
                 <svg class="h-[35px] md:h-[50px] w-auto shrink-0" width="40" height="50" viewBox="0 0 40 50" xmlns="http://www.w3.org/2000/svg">
                     <rect x="5" y="10" width="30" height="40" fill="#facc15" stroke="#ca8a04" stroke-width="2" rx="4"/>
@@ -224,177 +225,187 @@
             </div>
         </div>
 
-        <div class="flex gap-3 md:gap-4 shrink-0 items-end">
-            <div class="flex flex-col items-center">
-                <div class="draggable transition-transform hover:scale-110 flex items-center h-[35px] md:h-[50px] shrink-0" data-type="clownfish" data-price="2.00" data-event-hue="0">
-                    <svg class="h-full w-auto" width="100" height="60" viewBox="0 0 100 60" xmlns="http://www.w3.org/2000/svg">
-                        <path d="M 80 30 L 100 10 L 95 30 L 100 50 Z" fill="#ff7b00" stroke="#000" stroke-width="2"/>
-                        <ellipse cx="50" cy="30" rx="35" ry="20" fill="#ff7b00" stroke="#000" stroke-width="2"/>
-                        <path d="M 35 12 Q 40 30 35 48" fill="none" stroke="#fff" stroke-width="6"/>
-                        <path d="M 60 11 Q 65 30 60 49" fill="none" stroke="#fff" stroke-width="6"/>
-                        <circle cx="25" cy="25" r="4" fill="#fff" stroke="#000" stroke-width="1"/>
-                        <circle cx="24" cy="25" r="2" fill="#000"/>
-                    </svg>
+        <!-- SHOP-BEREICH: Hier kommt das Limit-Overlay drüber -->
+        <div class="relative flex flex-grow gap-3 md:gap-4 items-start">
+            <div class="flex gap-3 md:gap-4 shrink-0 items-end">
+                <div class="flex flex-col items-center">
+                    <div class="draggable transition-transform hover:scale-110 flex items-center h-[35px] md:h-[50px] shrink-0" data-type="clownfish" data-price="2.00" data-event-hue="0">
+                        <svg class="h-full w-auto" width="100" height="60" viewBox="0 0 100 60" xmlns="http://www.w3.org/2000/svg">
+                            <path d="M 80 30 L 100 10 L 95 30 L 100 50 Z" fill="#ff7b00" stroke="#000" stroke-width="2"/>
+                            <ellipse cx="50" cy="30" rx="35" ry="20" fill="#ff7b00" stroke="#000" stroke-width="2"/>
+                            <path d="M 35 12 Q 40 30 35 48" fill="none" stroke="#fff" stroke-width="6"/>
+                            <path d="M 60 11 Q 65 30 60 49" fill="none" stroke="#fff" stroke-width="6"/>
+                            <circle cx="25" cy="25" r="4" fill="#fff" stroke="#000" stroke-width="1"/>
+                            <circle cx="24" cy="25" r="2" fill="#000"/>
+                        </svg>
+                    </div>
+                    <span class="text-[10px] md:text-xs font-bold text-gray-700 mt-1">2,00 €</span>
                 </div>
-                <span class="text-[10px] md:text-xs font-bold text-gray-700 mt-1">2,00 €</span>
+
+                <div class="flex flex-col items-center">
+                    <div class="draggable transition-transform hover:scale-110 flex items-center h-[35px] md:h-[50px] shrink-0" data-type="bluetang" data-price="5.50" data-event-hue="0">
+                        <svg class="h-full w-auto" width="120" height="70" viewBox="0 0 120 70" xmlns="http://www.w3.org/2000/svg">
+                            <path d="M 90 35 L 120 15 L 115 35 L 120 55 Z" fill="#ffd700" stroke="#000" stroke-width="2"/>
+                            <path d="M 10 35 C 10 10, 50 5, 95 25 C 95 45, 50 65, 10 35 Z" fill="#0044ff" stroke="#000" stroke-width="2"/>
+                            <path d="M 30 20 C 50 15, 80 20, 90 35 C 80 40, 50 35, 30 20 Z" fill="#000"/>
+                            <circle cx="25" cy="30" r="5" fill="#fff" stroke="#000" stroke-width="1"/>
+                            <circle cx="23" cy="30" r="2" fill="#000"/>
+                        </svg>
+                    </div>
+                    <span class="text-[10px] md:text-xs font-bold text-gray-700 mt-1">5,50 €</span>
+                </div>
+
+                <div class="flex flex-col items-center">
+                    <div class="draggable transition-transform hover:scale-110 flex items-center h-[35px] md:h-[50px] shrink-0" data-type="goldfish" data-price="1.50" data-event-hue="0">
+                        <svg class="h-full w-auto" width="100" height="70" viewBox="0 0 100 70" xmlns="http://www.w3.org/2000/svg">
+                            <path d="M 75 35 Q 100 10 100 35 Q 100 60 75 35 Z" fill="#f97316" stroke="#c2410c" stroke-width="2"/>
+                            <ellipse cx="45" cy="35" rx="35" ry="25" fill="#f97316" stroke="#c2410c" stroke-width="2"/>
+                            <circle cx="20" cy="30" r="5" fill="#fff" stroke="#000" stroke-width="1"/>
+                            <circle cx="18" cy="30" r="2.5" fill="#000"/>
+                        </svg>
+                    </div>
+                    <span class="text-[10px] md:text-xs font-bold text-gray-700 mt-1">1,50 €</span>
+                </div>
+
+                <div class="flex flex-col items-center">
+                    <div class="draggable transition-transform hover:scale-110 flex items-center h-[35px] md:h-[50px] shrink-0" data-type="angelfish" data-price="8.00" data-event-hue="0">
+                        <svg class="h-full w-auto" width="80" height="100" viewBox="0 0 80 100" xmlns="http://www.w3.org/2000/svg">
+                            <path d="M 10 50 L 70 10 L 70 90 Z" fill="#93c5fd" stroke="#2563eb" stroke-width="2"/>
+                            <path d="M 30 40 L 30 60" stroke="#1e3a8a" stroke-width="4"/>
+                            <path d="M 50 25 L 50 75" stroke="#1e3a8a" stroke-width="4"/>
+                            <path d="M 70 50 L 90 30 L 90 70 Z" fill="#93c5fd" stroke="#2563eb" stroke-width="2"/>
+                            <circle cx="25" cy="50" r="3" fill="#fff" stroke="#000" stroke-width="1"/>
+                        </svg>
+                    </div>
+                    <span class="text-[10px] md:text-xs font-bold text-gray-700 mt-1">8,00 €</span>
+                </div>
+
+                <div class="flex flex-col items-center">
+                    <div class="draggable transition-transform hover:scale-110 flex items-center h-[35px] md:h-[50px] shrink-0" data-type="shrimp" data-price="3.50" data-event-hue="0">
+                        <svg class="h-full w-auto" width="60" height="50" viewBox="0 0 60 50" xmlns="http://www.w3.org/2000/svg">
+                            <path d="M 10 40 Q 20 20 40 20 Q 50 30 45 40" fill="none" stroke="#f87171" stroke-width="8" stroke-linecap="round"/>
+                            <path d="M 45 40 L 55 45 L 45 50 Z" fill="#f87171"/>
+                            <path d="M 25 35 L 20 45 M 30 36 L 28 48 M 35 34 L 35 48" stroke="#f87171" stroke-width="2"/>
+                            <path d="M 10 25 Q 5 10 15 5 M 12 25 Q 0 15 5 5" fill="none" stroke="#fca5a5" stroke-width="1"/>
+                            <circle cx="15" cy="22" r="2" fill="#000"/>
+                        </svg>
+                    </div>
+                    <span class="text-[10px] md:text-xs font-bold text-gray-700 mt-1">3,50 €</span>
+                </div>
+
+                <div class="flex flex-col items-center">
+                    <div class="draggable transition-transform hover:scale-110 flex items-center h-[35px] md:h-[50px] shrink-0" data-type="clam" data-price="12.00">
+                        <svg class="h-full w-auto" width="50" height="40" viewBox="0 0 50 40" xmlns="http://www.w3.org/2000/svg">
+                            <path d="M 5 35 C 0 15 20 0 45 15 C 48 30 30 40 5 35 Z" fill="#4c1d95" stroke="#312e81" stroke-width="2"/>
+                            <circle cx="20" cy="25" r="5" fill="#fdf8f5"/>
+                            <path d="M 5 35 C 10 20 25 15 45 25 C 42 35 20 40 5 35 Z" fill="#6d28d9" stroke="#312e81" stroke-width="2"/>
+                            <path d="M 15 25 L 10 32 M 25 22 L 20 35 M 35 24 L 30 35" stroke="#312e81" stroke-width="1"/>
+                        </svg>
+                    </div>
+                    <span class="text-[10px] md:text-xs font-bold text-gray-700 mt-1">12,00 €</span>
+                </div>
+
+                <div class="flex flex-col items-center">
+                    <div class="draggable transition-transform hover:scale-110 flex items-center h-[35px] md:h-[50px] shrink-0" data-type="starfish" data-price="4.50">
+                        <svg class="h-full w-auto" width="50" height="50" viewBox="0 0 50 50" xmlns="http://www.w3.org/2000/svg">
+                            <path d="M 25 5 L 31 18 L 45 20 L 35 30 L 38 45 L 25 38 L 12 45 L 15 30 L 5 20 L 19 18 Z" fill="#ef4444" stroke="#b91c1c" stroke-width="2" stroke-linejoin="round"/>
+                            <circle cx="20" cy="22" r="1.5" fill="#000"/>
+                            <circle cx="30" cy="22" r="1.5" fill="#000"/>
+                        </svg>
+                    </div>
+                    <span class="text-[10px] md:text-xs font-bold text-gray-700 mt-1">4,50 €</span>
+                </div>
             </div>
 
-            <div class="flex flex-col items-center">
-                <div class="draggable transition-transform hover:scale-110 flex items-center h-[35px] md:h-[50px] shrink-0" data-type="bluetang" data-price="5.50" data-event-hue="0">
-                    <svg class="h-full w-auto" width="120" height="70" viewBox="0 0 120 70" xmlns="http://www.w3.org/2000/svg">
-                        <path d="M 90 35 L 120 15 L 115 35 L 120 55 Z" fill="#ffd700" stroke="#000" stroke-width="2"/>
-                        <path d="M 10 35 C 10 10, 50 5, 95 25 C 95 45, 50 65, 10 35 Z" fill="#0044ff" stroke="#000" stroke-width="2"/>
-                        <path d="M 30 20 C 50 15, 80 20, 90 35 C 80 40, 50 35, 30 20 Z" fill="#000"/>
-                        <circle cx="25" cy="30" r="5" fill="#fff" stroke="#000" stroke-width="1"/>
-                        <circle cx="23" cy="30" r="2" fill="#000"/>
-                    </svg>
+            <div class="flex gap-3 md:gap-4 shrink-0 border-l-2 border-gray-200 pl-3 md:pl-4 items-end">
+                
+                <div class="flex flex-col items-center">
+                    <div class="draggable transition-transform hover:scale-110 flex items-center h-[35px] md:h-[50px] shrink-0" data-type="flowerplant" data-price="3.00">
+                        <svg class="h-full w-auto" width="60" height="100" viewBox="0 0 60 100" xmlns="http://www.w3.org/2000/svg">
+                            <path d="M 30 100 Q 35 60 30 20" fill="none" stroke="#166534" stroke-width="5" stroke-linecap="round"/>
+                            <path d="M 30 90 Q 50 80 55 50 Q 35 60 30 90" fill="#22c55e"/>
+                            <path d="M 30 75 Q 10 65 5 35 Q 25 45 30 75" fill="#4ade80"/>
+                            <g class="flower-bud" style="transform-origin: 30px 20px; transform: scale(0);">
+                                <circle cx="30" cy="20" r="8" fill="#facc15"/>
+                                <path d="M30 4 C35 9 35 14 30 14 C25 14 25 9 30 4 Z" fill="#f472b6" transform="rotate(0 30 20)"/>
+                                <path d="M30 4 C35 9 35 14 30 14 C25 14 25 9 30 4 Z" fill="#f472b6" transform="rotate(72 30 20)"/>
+                                <path d="M30 4 C35 9 35 14 30 14 C25 14 25 9 30 4 Z" fill="#f472b6" transform="rotate(144 30 20)"/>
+                                <path d="M30 4 C35 9 35 14 30 14 C25 14 25 9 30 4 Z" fill="#f472b6" transform="rotate(216 30 20)"/>
+                                <path d="M30 4 C35 9 35 14 30 14 C25 14 25 9 30 4 Z" fill="#f472b6" transform="rotate(288 30 20)"/>
+                            </g>
+                        </svg>
+                    </div>
+                    <span class="text-[10px] md:text-xs font-bold text-gray-700 mt-1">3,00 €</span>
                 </div>
-                <span class="text-[10px] md:text-xs font-bold text-gray-700 mt-1">5,50 €</span>
+
+                <div class="flex flex-col items-center">
+                    <div class="draggable transition-transform hover:scale-110 flex items-center h-[35px] md:h-[50px] shrink-0" data-type="plant" data-price="2.00">
+                        <svg class="h-full w-auto" width="40" height="100" viewBox="0 0 40 100" xmlns="http://www.w3.org/2000/svg">
+                            <path d="M 20 100 Q 10 75 25 50 T 20 0" fill="none" stroke="#22c55e" stroke-width="8" stroke-linecap="round"/>
+                        </svg>
+                    </div>
+                    <span class="text-[10px] md:text-xs font-bold text-gray-700 mt-1">2,00 €</span>
+                </div>
+
+                <div class="flex flex-col items-center">
+                    <div class="draggable transition-transform hover:scale-110 flex items-center h-[35px] md:h-[50px] shrink-0" data-type="redplant" data-price="2.50">
+                        <svg class="h-full w-auto" width="40" height="100" viewBox="0 0 40 100" xmlns="http://www.w3.org/2000/svg">
+                            <path d="M 20 100 Q 0 70 20 40 T 15 0" fill="none" stroke="#be123c" stroke-width="6" stroke-linecap="round"/>
+                            <path d="M 20 100 Q 40 80 20 50 T 35 15" fill="none" stroke="#e11d48" stroke-width="4" stroke-linecap="round"/>
+                            <path d="M 20 100 Q 10 90 25 60 T 5 30" fill="none" stroke="#9f1239" stroke-width="5" stroke-linecap="round"/>
+                        </svg>
+                    </div>
+                    <span class="text-[10px] md:text-xs font-bold text-gray-700 mt-1">2,50 €</span>
+                </div>
+
+                <div class="flex flex-col items-center">
+                    <div class="draggable transition-transform hover:scale-110 flex items-center h-[35px] md:h-[50px] shrink-0" data-type="seagrass" data-price="1.50">
+                        <svg class="h-full w-auto" width="30" height="110" viewBox="0 0 30 110" xmlns="http://www.w3.org/2000/svg">
+                            <path d="M 15 110 L 5 10" fill="none" stroke="#4ade80" stroke-width="4" stroke-linecap="round"/>
+                            <path d="M 15 110 L 15 5" fill="none" stroke="#22c55e" stroke-width="5" stroke-linecap="round"/>
+                            <path d="M 15 110 L 25 15" fill="none" stroke="#16a34a" stroke-width="4" stroke-linecap="round"/>
+                        </svg>
+                    </div>
+                    <span class="text-[10px] md:text-xs font-bold text-gray-700 mt-1">1,50 €</span>
+                </div>
+                
+                <div class="flex flex-col items-center">
+                    <div class="draggable transition-transform hover:scale-110 flex items-center h-[35px] md:h-[50px] shrink-0" data-type="stone" data-price="0.50">
+                        <svg class="h-full w-auto" width="60" height="40" viewBox="0 0 60 40" xmlns="http://www.w3.org/2000/svg">
+                            <path d="M 10 35 C 0 35, 0 20, 15 10 C 30 0, 50 5, 55 20 C 60 30, 50 35, 40 35 Z" fill="#78716c" stroke="#57534e" stroke-width="2"/>
+                        </svg>
+                    </div>
+                    <span class="text-[10px] md:text-xs font-bold text-gray-700 mt-1">0,50 €</span>
+                </div>
+
+                <div class="flex flex-col items-center">
+                    <div class="draggable transition-transform hover:scale-110 flex items-center h-[35px] md:h-[50px] shrink-0" data-type="granite" data-price="1.00">
+                        <svg class="h-full w-auto" width="50" height="45" viewBox="0 0 50 45" xmlns="http://www.w3.org/2000/svg">
+                            <polygon points="10,40 0,20 15,5 35,0 50,15 45,35 30,45" fill="#4b5563" stroke="#374151" stroke-width="2"/>
+                            <polygon points="15,35 10,20 20,10 35,15 40,30 25,35" fill="#6b7280"/>
+                        </svg>
+                    </div>
+                    <span class="text-[10px] md:text-xs font-bold text-gray-700 mt-1">1,00 €</span>
+                </div>
+
+                <div class="flex flex-col items-center">
+                    <div class="draggable transition-transform hover:scale-110 flex items-center h-[35px] md:h-[50px] shrink-0" data-type="sandstone" data-price="0.80">
+                        <svg class="h-full w-auto" width="80" height="40" viewBox="0 0 80 40" xmlns="http://www.w3.org/2000/svg">
+                            <ellipse cx="40" cy="25" rx="35" ry="15" fill="#d97706" stroke="#b45309" stroke-width="2"/>
+                            <path d="M 10 25 Q 40 15 70 25" fill="none" stroke="#b45309" stroke-width="2"/>
+                            <path d="M 15 20 Q 40 10 65 20" fill="none" stroke="#f59e0b" stroke-width="2"/>
+                            <ellipse cx="35" cy="15" rx="20" ry="10" fill="#f59e0b" stroke="#b45309" stroke-width="2"/>
+                        </svg>
+                    </div>
+                    <span class="text-[10px] md:text-xs font-bold text-gray-700 mt-1">0,80 €</span>
+                </div>
             </div>
 
-            <div class="flex flex-col items-center">
-                <div class="draggable transition-transform hover:scale-110 flex items-center h-[35px] md:h-[50px] shrink-0" data-type="goldfish" data-price="1.50" data-event-hue="0">
-                    <svg class="h-full w-auto" width="100" height="70" viewBox="0 0 100 70" xmlns="http://www.w3.org/2000/svg">
-                        <path d="M 75 35 Q 100 10 100 35 Q 100 60 75 35 Z" fill="#f97316" stroke="#c2410c" stroke-width="2"/>
-                        <ellipse cx="45" cy="35" rx="35" ry="25" fill="#f97316" stroke="#c2410c" stroke-width="2"/>
-                        <circle cx="20" cy="30" r="5" fill="#fff" stroke="#000" stroke-width="1"/>
-                        <circle cx="18" cy="30" r="2.5" fill="#000"/>
-                    </svg>
-                </div>
-                <span class="text-[10px] md:text-xs font-bold text-gray-700 mt-1">1,50 €</span>
-            </div>
-
-            <div class="flex flex-col items-center">
-                <div class="draggable transition-transform hover:scale-110 flex items-center h-[35px] md:h-[50px] shrink-0" data-type="angelfish" data-price="8.00" data-event-hue="0">
-                    <svg class="h-full w-auto" width="80" height="100" viewBox="0 0 80 100" xmlns="http://www.w3.org/2000/svg">
-                        <path d="M 10 50 L 70 10 L 70 90 Z" fill="#93c5fd" stroke="#2563eb" stroke-width="2"/>
-                        <path d="M 30 40 L 30 60" stroke="#1e3a8a" stroke-width="4"/>
-                        <path d="M 50 25 L 50 75" stroke="#1e3a8a" stroke-width="4"/>
-                        <path d="M 70 50 L 90 30 L 90 70 Z" fill="#93c5fd" stroke="#2563eb" stroke-width="2"/>
-                        <circle cx="25" cy="50" r="3" fill="#fff" stroke="#000" stroke-width="1"/>
-                    </svg>
-                </div>
-                <span class="text-[10px] md:text-xs font-bold text-gray-700 mt-1">8,00 €</span>
-            </div>
-
-            <div class="flex flex-col items-center">
-                <div class="draggable transition-transform hover:scale-110 flex items-center h-[35px] md:h-[50px] shrink-0" data-type="shrimp" data-price="3.50" data-event-hue="0">
-                    <svg class="h-full w-auto" width="60" height="50" viewBox="0 0 60 50" xmlns="http://www.w3.org/2000/svg">
-                        <path d="M 10 40 Q 20 20 40 20 Q 50 30 45 40" fill="none" stroke="#f87171" stroke-width="8" stroke-linecap="round"/>
-                        <path d="M 45 40 L 55 45 L 45 50 Z" fill="#f87171"/>
-                        <path d="M 25 35 L 20 45 M 30 36 L 28 48 M 35 34 L 35 48" stroke="#f87171" stroke-width="2"/>
-                        <path d="M 10 25 Q 5 10 15 5 M 12 25 Q 0 15 5 5" fill="none" stroke="#fca5a5" stroke-width="1"/>
-                        <circle cx="15" cy="22" r="2" fill="#000"/>
-                    </svg>
-                </div>
-                <span class="text-[10px] md:text-xs font-bold text-gray-700 mt-1">3,50 €</span>
-            </div>
-
-            <div class="flex flex-col items-center">
-                <div class="draggable transition-transform hover:scale-110 flex items-center h-[35px] md:h-[50px] shrink-0" data-type="clam" data-price="12.00">
-                    <svg class="h-full w-auto" width="50" height="40" viewBox="0 0 50 40" xmlns="http://www.w3.org/2000/svg">
-                        <path d="M 5 35 C 0 15 20 0 45 15 C 48 30 30 40 5 35 Z" fill="#4c1d95" stroke="#312e81" stroke-width="2"/>
-                        <circle cx="20" cy="25" r="5" fill="#fdf8f5"/>
-                        <path d="M 5 35 C 10 20 25 15 45 25 C 42 35 20 40 5 35 Z" fill="#6d28d9" stroke="#312e81" stroke-width="2"/>
-                        <path d="M 15 25 L 10 32 M 25 22 L 20 35 M 35 24 L 30 35" stroke="#312e81" stroke-width="1"/>
-                    </svg>
-                </div>
-                <span class="text-[10px] md:text-xs font-bold text-gray-700 mt-1">12,00 €</span>
-            </div>
-
-            <div class="flex flex-col items-center">
-                <div class="draggable transition-transform hover:scale-110 flex items-center h-[35px] md:h-[50px] shrink-0" data-type="starfish" data-price="4.50">
-                    <svg class="h-full w-auto" width="50" height="50" viewBox="0 0 50 50" xmlns="http://www.w3.org/2000/svg">
-                        <path d="M 25 5 L 31 18 L 45 20 L 35 30 L 38 45 L 25 38 L 12 45 L 15 30 L 5 20 L 19 18 Z" fill="#ef4444" stroke="#b91c1c" stroke-width="2" stroke-linejoin="round"/>
-                        <circle cx="20" cy="22" r="1.5" fill="#000"/>
-                        <circle cx="30" cy="22" r="1.5" fill="#000"/>
-                    </svg>
-                </div>
-                <span class="text-[10px] md:text-xs font-bold text-gray-700 mt-1">4,50 €</span>
-            </div>
-        </div>
-
-        <div class="flex gap-3 md:gap-4 shrink-0 border-l-2 border-gray-200 pl-3 md:pl-4 items-end">
-            
-            <div class="flex flex-col items-center">
-                <div class="draggable transition-transform hover:scale-110 flex items-center h-[35px] md:h-[50px] shrink-0" data-type="flowerplant" data-price="3.00">
-                    <svg class="h-full w-auto" width="60" height="100" viewBox="0 0 60 100" xmlns="http://www.w3.org/2000/svg">
-                        <path d="M 30 100 Q 35 60 30 20" fill="none" stroke="#166534" stroke-width="5" stroke-linecap="round"/>
-                        <path d="M 30 90 Q 50 80 55 50 Q 35 60 30 90" fill="#22c55e"/>
-                        <path d="M 30 75 Q 10 65 5 35 Q 25 45 30 75" fill="#4ade80"/>
-                        <g class="flower-bud" style="transform-origin: 30px 20px; transform: scale(0);">
-                            <circle cx="30" cy="20" r="8" fill="#facc15"/>
-                            <path d="M30 4 C35 9 35 14 30 14 C25 14 25 9 30 4 Z" fill="#f472b6" transform="rotate(0 30 20)"/>
-                            <path d="M30 4 C35 9 35 14 30 14 C25 14 25 9 30 4 Z" fill="#f472b6" transform="rotate(72 30 20)"/>
-                            <path d="M30 4 C35 9 35 14 30 14 C25 14 25 9 30 4 Z" fill="#f472b6" transform="rotate(144 30 20)"/>
-                            <path d="M30 4 C35 9 35 14 30 14 C25 14 25 9 30 4 Z" fill="#f472b6" transform="rotate(216 30 20)"/>
-                            <path d="M30 4 C35 9 35 14 30 14 C25 14 25 9 30 4 Z" fill="#f472b6" transform="rotate(288 30 20)"/>
-                        </g>
-                    </svg>
-                </div>
-                <span class="text-[10px] md:text-xs font-bold text-gray-700 mt-1">3,00 €</span>
-            </div>
-
-            <div class="flex flex-col items-center">
-                <div class="draggable transition-transform hover:scale-110 flex items-center h-[35px] md:h-[50px] shrink-0" data-type="plant" data-price="2.00">
-                    <svg class="h-full w-auto" width="40" height="100" viewBox="0 0 40 100" xmlns="http://www.w3.org/2000/svg">
-                        <path d="M 20 100 Q 10 75 25 50 T 20 0" fill="none" stroke="#22c55e" stroke-width="8" stroke-linecap="round"/>
-                    </svg>
-                </div>
-                <span class="text-[10px] md:text-xs font-bold text-gray-700 mt-1">2,00 €</span>
-            </div>
-
-            <div class="flex flex-col items-center">
-                <div class="draggable transition-transform hover:scale-110 flex items-center h-[35px] md:h-[50px] shrink-0" data-type="redplant" data-price="2.50">
-                    <svg class="h-full w-auto" width="40" height="100" viewBox="0 0 40 100" xmlns="http://www.w3.org/2000/svg">
-                        <path d="M 20 100 Q 0 70 20 40 T 15 0" fill="none" stroke="#be123c" stroke-width="6" stroke-linecap="round"/>
-                        <path d="M 20 100 Q 40 80 20 50 T 35 15" fill="none" stroke="#e11d48" stroke-width="4" stroke-linecap="round"/>
-                        <path d="M 20 100 Q 10 90 25 60 T 5 30" fill="none" stroke="#9f1239" stroke-width="5" stroke-linecap="round"/>
-                    </svg>
-                </div>
-                <span class="text-[10px] md:text-xs font-bold text-gray-700 mt-1">2,50 €</span>
-            </div>
-
-            <div class="flex flex-col items-center">
-                <div class="draggable transition-transform hover:scale-110 flex items-center h-[35px] md:h-[50px] shrink-0" data-type="seagrass" data-price="1.50">
-                    <svg class="h-full w-auto" width="30" height="110" viewBox="0 0 30 110" xmlns="http://www.w3.org/2000/svg">
-                        <path d="M 15 110 L 5 10" fill="none" stroke="#4ade80" stroke-width="4" stroke-linecap="round"/>
-                        <path d="M 15 110 L 15 5" fill="none" stroke="#22c55e" stroke-width="5" stroke-linecap="round"/>
-                        <path d="M 15 110 L 25 15" fill="none" stroke="#16a34a" stroke-width="4" stroke-linecap="round"/>
-                    </svg>
-                </div>
-                <span class="text-[10px] md:text-xs font-bold text-gray-700 mt-1">1,50 €</span>
-            </div>
-            
-            <div class="flex flex-col items-center">
-                <div class="draggable transition-transform hover:scale-110 flex items-center h-[35px] md:h-[50px] shrink-0" data-type="stone" data-price="0.50">
-                    <svg class="h-full w-auto" width="60" height="40" viewBox="0 0 60 40" xmlns="http://www.w3.org/2000/svg">
-                        <path d="M 10 35 C 0 35, 0 20, 15 10 C 30 0, 50 5, 55 20 C 60 30, 50 35, 40 35 Z" fill="#78716c" stroke="#57534e" stroke-width="2"/>
-                    </svg>
-                </div>
-                <span class="text-[10px] md:text-xs font-bold text-gray-700 mt-1">0,50 €</span>
-            </div>
-
-            <div class="flex flex-col items-center">
-                <div class="draggable transition-transform hover:scale-110 flex items-center h-[35px] md:h-[50px] shrink-0" data-type="granite" data-price="1.00">
-                    <svg class="h-full w-auto" width="50" height="45" viewBox="0 0 50 45" xmlns="http://www.w3.org/2000/svg">
-                        <polygon points="10,40 0,20 15,5 35,0 50,15 45,35 30,45" fill="#4b5563" stroke="#374151" stroke-width="2"/>
-                        <polygon points="15,35 10,20 20,10 35,15 40,30 25,35" fill="#6b7280"/>
-                    </svg>
-                </div>
-                <span class="text-[10px] md:text-xs font-bold text-gray-700 mt-1">1,00 €</span>
-            </div>
-
-            <div class="flex flex-col items-center">
-                <div class="draggable transition-transform hover:scale-110 flex items-center h-[35px] md:h-[50px] shrink-0" data-type="sandstone" data-price="0.80">
-                    <svg class="h-full w-auto" width="80" height="40" viewBox="0 0 80 40" xmlns="http://www.w3.org/2000/svg">
-                        <ellipse cx="40" cy="25" rx="35" ry="15" fill="#d97706" stroke="#b45309" stroke-width="2"/>
-                        <path d="M 10 25 Q 40 15 70 25" fill="none" stroke="#b45309" stroke-width="2"/>
-                        <path d="M 15 20 Q 40 10 65 20" fill="none" stroke="#f59e0b" stroke-width="2"/>
-                        <ellipse cx="35" cy="15" rx="20" ry="10" fill="#f59e0b" stroke="#b45309" stroke-width="2"/>
-                    </svg>
-                </div>
-                <span class="text-[10px] md:text-xs font-bold text-gray-700 mt-1">0,80 €</span>
+            <!-- Overlay für Aquarium-Einsatzlimit (nur über den kaufbaren Objekten) -->
+            <div id="shop-limit-overlay" class="absolute -inset-2 bg-red-900/40 backdrop-blur-[1px] hidden flex-col items-center justify-center z-30 transition-opacity duration-300 rounded">
+                <span class="bg-red-600 text-white font-bold px-4 py-2 rounded-xl text-sm md:text-lg shadow-[0_0_15px_rgba(220,38,38,0.8)] border-2 border-red-400 text-center mx-4">
+                    🚫 Limit erreicht (30/30)
+                </span>
             </div>
         </div>
     </footer>
@@ -418,7 +429,11 @@
         const sellBtn = document.getElementById('sell-btn');
         const netBtn = document.getElementById('net-btn'); 
         const spongeBtn = document.getElementById('sponge-btn'); 
+        const limitOverlay = document.getElementById('shop-limit-overlay');
         
+        // --- Limit-Variable ---
+        const MAX_AQUARIUM_ITEMS = 30;
+
         // --- Algen Canvas Setup ---
         const algaeCanvas = document.getElementById('algae-canvas');
         const algaeCtx = algaeCanvas.getContext('2d');
@@ -863,6 +878,8 @@
         });
 
         function startDrag(e) {
+            if (aquariumItems.length >= MAX_AQUARIUM_ITEMS) return; // Wenn Limit erreicht, Drag komplett verbieten
+            
             disableTools();
             potentialDragElement = e.currentTarget;
             dragStartX = e.clientX;
@@ -891,7 +908,6 @@
                     isDragging = true;
                     
                     if (budget < currentBasePrice) {
-                        // FIX: Wir merken uns das HTML-Element, bevor drag abgebrochen wird!
                         const flashElement = potentialDragElement;
                         flashElement.classList.add('bg-red-200', 'rounded', 'transition-colors', 'duration-300');
                         setTimeout(() => flashElement.classList.remove('bg-red-200', 'rounded', 'transition-colors', 'duration-300'), 300);
@@ -1123,23 +1139,21 @@
             }
 
             pickNewTarget() {
-                const marginX = this.width;
-                const marginY = this.height;
-                
-                const minX = marginX;
-                const maxX = tank.clientWidth - marginX * 2;
+                // Bessere Ausnutzung der Beckenbreite und -höhe
+                const padX = (this.width * this.sizeMultiplier) / 4;
+                const minX = padX;
+                const maxX = tank.clientWidth - padX;
                 this.targetX = minX + Math.random() * (maxX - minX);
                 
                 if (this.type === 'shrimp') {
                     this.targetY = tank.clientHeight - 60 - Math.random() * 40;
                 } else {
-                    let yDelta = (Math.random() * 100) - 50;
-                    this.targetY = this.y + yDelta;
+                    // Volle Tiefe nutzen statt nur +/- 50px
+                    const padY = (this.height * this.sizeMultiplier) / 2;
+                    const minY = padY + 20; // Wasseroberfläche
+                    const maxY = tank.clientHeight - padY - 60; // Sandboden
                     
-                    const minY = marginY + 20;
-                    const maxY = tank.clientHeight - marginY - 60;
-                    if (this.targetY < minY) this.targetY = minY + Math.random() * 30;
-                    if (this.targetY > maxY) this.targetY = maxY - Math.random() * 30;
+                    this.targetY = minY + Math.random() * (maxY - minY);
                 }
             }
 
@@ -1186,7 +1200,10 @@
                                 <path d="M12 2 C15 5 15 8 12 8 C9 8 9 5 12 2 Z" fill="#f472b6" transform="rotate(216 12 12)"/>
                                 <path d="M12 2 C15 5 15 8 12 8 C9 8 9 5 12 2 Z" fill="#f472b6" transform="rotate(288 12 12)"/>
                             </svg>`;
-                        spawnItem('blossom', this.x + 10, this.y - (this.height * this.sizeMultiplier) + 20, blossomSvg, 3.00, 0); 
+                        const babyBlossom = spawnItem('blossom', this.x + 10, this.y - (this.height * this.sizeMultiplier) + 20, blossomSvg, 3.00, 0); 
+                        // Blütengröße der Mutterpflanze angleichen
+                        babyBlossom.sizeMultiplier = this.sizeMultiplier;
+                        babyBlossom.svgElement.style.transform = `scale(${babyBlossom.sizeMultiplier})`;
                     }
                     
                     if (this.budElement) {
@@ -1273,7 +1290,7 @@
                         this.y += this.vy;
                     }
 
-                    const padX = (this.width * this.sizeMultiplier) / 2;
+                    const padX = (this.width * this.sizeMultiplier) / 4;
                     const padY = (this.height * this.sizeMultiplier) / 2;
                     const centerX = this.x + this.width / 2;
                     const centerY = this.y + this.height / 2;
@@ -1332,6 +1349,7 @@
                         }
                     }
                     this.element.style.transform = `translate(${this.x + Math.sin(Date.now() * 0.002) * 5}px, ${this.y}px)`;
+                    this.svgElement.style.transform = `scale(${this.sizeMultiplier})`;
                 } else {
                     if (this.y < this.floorY) {
                         this.vy += this.gravity;
@@ -1369,6 +1387,8 @@
         }
 
         function checkBreeding() {
+            if (aquariumItems.length >= MAX_AQUARIUM_ITEMS) return; // Zuchtstop bei Limit
+
             const now = Date.now();
             for (let i = 0; i < aquariumItems.length; i++) {
                 let itemA = aquariumItems[i];
@@ -1411,11 +1431,20 @@
         }
 
         function gameLoop() {
-            // Nach 60 Sekunden beginnen die Algen langsam zu wachsen
-            if (Date.now() - lastAlgaeCleanTime > 60000) { 
+            // Nach 90 Sekunden beginnen die Algen langsam zu wachsen
+            if (Date.now() - lastAlgaeCleanTime > 90000) { 
                 if (Math.random() < 0.02) { 
                     drawAlgaePatch(Math.random() * algaeCanvas.width, Math.random() * algaeCanvas.height);
                 }
+            }
+
+            // Limit prüfen und visuell anzeigen
+            if (aquariumItems.length >= MAX_AQUARIUM_ITEMS) {
+                limitOverlay.classList.remove('hidden');
+                limitOverlay.classList.add('flex');
+            } else {
+                limitOverlay.classList.add('hidden');
+                limitOverlay.classList.remove('flex');
             }
 
             if (!currentEel && Math.random() < 0.0015) { 
