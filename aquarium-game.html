@@ -905,7 +905,7 @@
         }
 
         function spawnFoodParticle() {
-            const x = tank.clientWidth / 2 - 100 + Math.random() * 200;
+            const x = tank.clientWidth * 0.1 + Math.random() * tank.clientWidth * 0.8;
             const y = -10;
             foodParticles.push(new FoodParticle(x, y));
         }
@@ -1238,7 +1238,10 @@
                 this.framesAlive = 0;
                 
                 this.lastGrowthTime = 0; 
-                this.lastBreedTime = Date.now(); 
+                this.lastBreedTime = Date.now();
+                this.foodEatenCount = 0;
+                this.lastFoodTime = 0;
+                this.satietyDuration = 5000; 
                 
                 this.isAnimal = (['clownfish', 'bluetang', 'goldfish', 'angelfish', 'shrimp', 'pufferfish'].includes(type));
                 this.isClam = (type === 'clam');
@@ -1379,33 +1382,41 @@
                 }
 
                 if (this.isAnimal) {
+                    const now = Date.now();
+                    const isSatiated = (now - this.lastFoodTime < this.satietyDuration) && this.foodEatenCount >= 2;
+                    
                     if (!this.targetedFood || this.targetedFood.isEaten) {
                         this.targetedFood = null;
                         this.speed = this.baseSpeed;
-                        let closestFood = null;
-                        let minDistance = 300;
+                        
+                        if (!isSatiated) {
+                            let closestFood = null;
+                            let minDistance = 300;
 
-                        foodParticles.forEach(food => {
-                            if (!food.isEaten) {
-                                const dx = food.x - this.x;
-                                const dy = food.y - this.y;
-                                const dist = Math.sqrt(dx * dx + dy * dy);
-                                if (dist < minDistance) {
-                                    minDistance = dist;
-                                    closestFood = food;
+                            foodParticles.forEach(food => {
+                                if (!food.isEaten) {
+                                    const dx = food.x - this.x;
+                                    const dy = food.y - this.y;
+                                    const dist = Math.sqrt(dx * dx + dy * dy);
+                                    if (dist < minDistance) {
+                                        minDistance = dist;
+                                        closestFood = food;
+                                    }
                                 }
-                            }
-                        });
+                            });
 
-                        if (closestFood) {
-                            this.targetedFood = closestFood;
-                            this.speed = this.baseSpeed * 2.5; 
+                            if (closestFood) {
+                                this.targetedFood = closestFood;
+                                this.speed = this.baseSpeed * 2.5; 
+                            }
                         }
                     }
 
-                    if (this.targetedFood) {
+                    if (this.targetedFood && !isSatiated) {
                         this.targetX = this.targetedFood.x;
                         this.targetY = this.targetedFood.y;
+                    } else if (isSatiated) {
+                        this.targetedFood = null;
                     }
 
                     const dx = this.targetX - this.x;
@@ -1416,8 +1427,13 @@
                         if (this.targetedFood) {
                             this.targetedFood.eat();
                             this.targetedFood = null;
+                            this.foodEatenCount++;
+                            this.lastFoodTime = now;
                             
-                            const now = Date.now();
+                            if (this.foodEatenCount >= 3) {
+                                this.foodEatenCount = 0;
+                            }
+                            
                             if (this.sizeMultiplier < 2.0 && (now - this.lastGrowthTime > 7000)) { 
                                 if (this.sizeMultiplier < 1.0) {
                                     this.sizeMultiplier += 0.1;
