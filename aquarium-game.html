@@ -148,17 +148,38 @@
 </head>
 <body class="bg-gray-100 flex flex-col overflow-hidden select-none">
 
-    <header class="bg-blue-800 text-white p-2 md:p-4 shadow-md z-10 flex justify-between items-center shrink-0">
-        <div>
-            <h1 class="text-lg md:text-3xl font-bold truncate">Jontes Aquarium</h1>
+    <header class="bg-blue-800 text-white p-2 md:p-4 shadow-md z-10 flex justify-between items-center shrink-0 gap-2">
+        <div class="shrink-0">
+            <h1 class="text-base md:text-2xl font-bold truncate">Jontes Aquarium</h1>
         </div>
-        <div class="bg-blue-900 px-3 md:px-4 py-1 md:py-2 rounded-lg border-2 border-blue-400 text-center shrink-0">
-            <span class="text-[10px] md:text-sm text-blue-200 block uppercase font-bold tracking-wider">Guthaben</span>
-            <span id="budget-display" class="text-base md:text-2xl font-bold text-green-400">20,00 €</span>
+
+        <div id="achievement-container" class="hidden sm:flex flex-grow items-center gap-2 mx-2 max-w-sm md:max-w-xl lg:max-w-3xl min-w-0">
+            </div>
+
+        <div class="flex gap-2 shrink-0 items-center">
+            <div id="trophy-display" class="bg-amber-950/40 px-2 md:px-3 py-0.5 md:py-1 rounded-lg border-2 border-amber-500 text-center flex flex-col justify-center items-center min-w-[55px] md:min-w-[75px] transition-all duration-300">
+                <span class="text-[9px] md:text-[11px] text-amber-300 block uppercase font-bold tracking-wider leading-none mb-0.5">Pokale</span>
+                <div class="flex items-center gap-0.5 md:gap-1">
+                    <span class="text-sm md:text-base">🏆</span>
+                    <span id="trophy-count" class="text-xs md:text-base font-bold text-amber-400">0</span>
+                </div>
+            </div>
+            <div class="bg-blue-900 px-3 md:px-4 py-1 md:py-2 rounded-lg border-2 border-blue-400 text-center shrink-0">
+                <span class="text-[10px] md:text-sm text-blue-200 block uppercase font-bold tracking-wider">Guthaben</span>
+                <span id="budget-display" class="text-base md:text-2xl font-bold text-green-400">20,00 €</span>
+            </div>
         </div>
     </header>
 
     <main id="aquarium-tank" class="flex-grow w-full border-b-8 border-yellow-700/50">
+        <div id="achievement-popup" class="absolute top-20 left-1/2 transform -translate-x-1/2 bg-gradient-to-r from-yellow-500 via-amber-400 to-yellow-500 text-slate-900 px-6 py-3 rounded-2xl font-bold shadow-[0_10px_25px_rgba(251,191,36,0.5)] border-4 border-white z-50 hidden items-center gap-3 transition-all duration-500 opacity-0 scale-75">
+            <span class="text-3xl animate-pulse">🏆</span>
+            <div>
+                <div class="text-[10px] uppercase tracking-wider text-amber-950 font-black">Aufgabe geschafft!</div>
+                <div id="ach-popup-text" class="text-xs md:text-base font-extrabold">Super gemacht!</div>
+            </div>
+        </div>
+
         <div id="event-banner" class="absolute top-4 left-1/2 transform -translate-x-1/2 bg-red-500 text-white px-4 md:px-6 py-1 md:py-2 rounded-full font-bold shadow-lg z-50 hidden items-center gap-2 transition-opacity duration-500 opacity-0 text-xs md:text-base whitespace-nowrap">
             <span id="event-banner-text">🎉 Event: Fische stark reduziert!</span>
         </div>
@@ -268,9 +289,9 @@
                     <div class="draggable transition-transform hover:scale-110 flex items-center h-[35px] md:h-[50px] shrink-0" data-type="goldfish" data-price="1.50" data-event-hue="0">
                         <svg class="h-full w-auto" width="100" height="70" viewBox="0 0 100 70" xmlns="http://www.w3.org/2000/svg">
                             <path d="M 75 35 Q 95 10 100 25 Q 85 35 100 45 Q 95 60 75 35 Z" fill="#fb923c" stroke="#c2410c" stroke-width="1.5" stroke-linejoin="round"/>
-                            <path d="M 75 35 Q 90 20 95 25 M 75 35 Q 90 50 95 45" fill="none" stroke="#c2410c" stroke-width="1.5" stroke-linecap="round"/>
+                            <path d="M 75 35 Q 90 20 95 25 M 75 35 Q 90 50 95 45" fill="none" stroke="#c2410c" stroke-width="1.5" stroke-linejoin="round"/>
                             <path d="M 35 12 Q 50 -5 65 18" fill="#fb923c" stroke="#c2410c" stroke-width="1.5" stroke-linejoin="round"/>
-                            <path d="M 40 11 Q 50 5 60 15" fill="none" stroke="#c2410c" stroke-width="1.5" stroke-linecap="round"/>
+                            <path d="M 40 11 Q 50 5 60 15" fill="none" stroke="#c2410c" stroke-width="1.5" stroke-linejoin="round"/>
                             <ellipse cx="45" cy="35" rx="35" ry="22" fill="#f97316" stroke="#c2410c" stroke-width="1.5"/>
                             <ellipse cx="45" cy="45" rx="25" ry="9" fill="#fcd34d" opacity="0.6" stroke="none"/>
                             <path d="M 40 25 Q 45 30 40 35 M 50 25 Q 55 30 50 35 M 60 25 Q 65 30 60 35 M 45 35 Q 50 40 45 45 M 55 35 Q 60 40 55 45" fill="none" stroke="#ea580c" stroke-width="1.5" opacity="0.5" stroke-linecap="round"/>
@@ -497,10 +518,8 @@
         const spongeBtn = document.getElementById('sponge-btn'); 
         const limitOverlay = document.getElementById('shop-limit-overlay');
         
-        // --- Limit-Variable ---
         const MAX_AQUARIUM_ITEMS = 30;
 
-        // --- Algen Canvas Setup ---
         const algaeCanvas = document.getElementById('algae-canvas');
         const algaeCtx = algaeCanvas.getContext('2d');
         
@@ -539,7 +558,6 @@
         let budget = 20.00;
         let currentInventoryValue = 0.00;
 
-        // --- Algen-Logik ---
         let lastAlgaeCleanTime = Date.now();
         let isWiping = false;
 
@@ -563,11 +581,9 @@
             algaeCtx.restore();
         }
 
-        // --- Werkzeug-Status ---
         let isNetActive = false;
         let isSpongeActive = false;
 
-        // --- Event Logik ---
         let animalEventTimeout;
         let nextAnimalEventTimeout;
         let hideBannerTimeout;
@@ -583,6 +599,223 @@
             'shrimp': 'Garnelen',
             'pufferfish': 'Kugelfische'
         };
+
+        // ==========================================
+        //        ACHIEVEMENT SYSTEM
+        // ==========================================
+        let trophies = 0;
+        const stats = {
+            foodSpent: 0,
+            caughtEels: 0,
+            caughtBlossoms: 0,
+            algaeCleaned: 0
+        };
+
+        const achievements = [
+            // Gesamtanzahl Fische (Maximal 30 im Becken)
+            { id: 'total_7', text: 'Habe 7 Fische insgesamt', type: 'total_animals', target: 7, completed: false },
+            { id: 'total_13', text: 'Habe 13 Fische insgesamt', type: 'total_animals', target: 13, completed: false },
+            { id: 'total_19', text: 'Habe 19 Fische insgesamt', type: 'total_animals', target: 19, completed: false },
+            { id: 'total_29', text: 'Habe 29 Fische insgesamt', type: 'total_animals', target: 29, completed: false },
+
+            // Algen schrubben
+            { id: 'clean_100', text: 'Schrubbe 100 Algen weg', type: 'stat', statKey: 'algaeCleaned', target: 100, completed: false },
+            { id: 'clean_250', text: 'Schrubbe 250 Algen weg', type: 'stat', statKey: 'algaeCleaned', target: 250, completed: false },
+            { id: 'clean_500', text: 'Schrubbe 500 Algen weg', type: 'stat', statKey: 'algaeCleaned', target: 500, completed: false },
+            { id: 'clean_1000', text: 'Schrubbe 1000 Algen weg', type: 'stat', statKey: 'algaeCleaned', target: 1000, completed: false },
+            { id: 'clean_2500', text: 'Schrubbe 2500 Algen weg', type: 'stat', statKey: 'algaeCleaned', target: 2500, completed: false },
+
+            // Futterausgaben
+            { id: 'food_1', text: 'Kaufe Futter für 1,20 €', type: 'stat', statKey: 'foodSpent', isMoney: true, target: 1.20, completed: false },
+            { id: 'food_2', text: 'Kaufe Futter für 3,40 €', type: 'stat', statKey: 'foodSpent', isMoney: true, target: 3.40, completed: false },
+            { id: 'food_3', text: 'Kaufe Futter für 8,80 €', type: 'stat', statKey: 'foodSpent', isMoney: true, target: 8.80, completed: false },
+            { id: 'food_4', text: 'Kaufe Futter für 17,00 €', type: 'stat', statKey: 'foodSpent', isMoney: true, target: 17.00, completed: false },
+            { id: 'food_5', text: 'Kaufe Futter für 45,00 €', type: 'stat', statKey: 'foodSpent', isMoney: true, target: 45.00, completed: false },
+
+            // Röhrenaale fangen
+            { id: 'eel_1', text: 'Fange 1 Röhrenaal', type: 'stat', statKey: 'caughtEels', target: 1, completed: false },
+            { id: 'eel_3', text: 'Fange 3 Röhrenaale', type: 'stat', statKey: 'caughtEels', target: 3, completed: false },
+            { id: 'eel_7', text: 'Fange 7 Röhrenaale', type: 'stat', statKey: 'caughtEels', target: 7, completed: false },
+            { id: 'eel_15', text: 'Fange 15 Röhrenaale', type: 'stat', statKey: 'caughtEels', target: 15, completed: false },
+            { id: 'eel_31', text: 'Fange 31 Röhrenaale', type: 'stat', statKey: 'caughtEels', target: 31, completed: false },
+
+            // Blüten ernten
+            { id: 'blossom_3', text: 'Ernte 3 Blüten', type: 'stat', statKey: 'caughtBlossoms', target: 3, completed: false },
+            { id: 'blossom_8', text: 'Ernte 8 Blüten', type: 'stat', statKey: 'caughtBlossoms', target: 8, completed: false },
+            { id: 'blossom_17', text: 'Ernte 17 Blüten', type: 'stat', statKey: 'caughtBlossoms', target: 17, completed: false },
+            { id: 'blossom_35', text: 'Ernte 35 Blüten', type: 'stat', statKey: 'caughtBlossoms', target: 35, completed: false },
+            { id: 'blossom_77', text: 'Ernte 77 Blüten', type: 'stat', statKey: 'caughtBlossoms', target: 77, completed: false },
+
+            // Clownfische
+            { id: 'clownfish_3', text: 'Habe 3 Clownfische', type: 'type_count', itemType: 'clownfish', target: 3, completed: false },
+            { id: 'clownfish_8', text: 'Habe 8 Clownfische', type: 'type_count', itemType: 'clownfish', target: 8, completed: false },
+            { id: 'clownfish_14', text: 'Habe 14 Clownfische', type: 'type_count', itemType: 'clownfish', target: 14, completed: false },
+            { id: 'clownfish_21', text: 'Habe 21 Clownfische', type: 'type_count', itemType: 'clownfish', target: 21, completed: false },
+
+            // Doktorfische (Bluetang)
+            { id: 'bluetang_2', text: 'Habe 2 Doktorfische', type: 'type_count', itemType: 'bluetang', target: 2, completed: false },
+            { id: 'bluetang_5', text: 'Habe 5 Doktorfische', type: 'type_count', itemType: 'bluetang', target: 5, completed: false },
+            { id: 'bluetang_11', text: 'Habe 11 Doktorfische', type: 'type_count', itemType: 'bluetang', target: 11, completed: false },
+            { id: 'bluetang_17', text: 'Habe 17 Doktorfische', type: 'type_count', itemType: 'bluetang', target: 17, completed: false },
+
+            // Goldfische
+            { id: 'goldfish_4', text: 'Habe 4 Goldfische', type: 'type_count', itemType: 'goldfish', target: 4, completed: false },
+            { id: 'goldfish_9', text: 'Habe 9 Goldfische', type: 'type_count', itemType: 'goldfish', target: 9, completed: false },
+            { id: 'goldfish_15', text: 'Habe 15 Goldfische', type: 'type_count', itemType: 'goldfish', target: 15, completed: false },
+            { id: 'goldfish_22', text: 'Habe 22 Goldfische', type: 'type_count', itemType: 'goldfish', target: 22, completed: false },
+
+            // Skalare (Angelfish)
+            { id: 'angelfish_2', text: 'Habe 2 Skalare', type: 'type_count', itemType: 'angelfish', target: 2, completed: false },
+            { id: 'angelfish_6', text: 'Habe 6 Skalare', type: 'type_count', itemType: 'angelfish', target: 6, completed: false },
+            { id: 'angelfish_12', text: 'Habe 12 Skalare', type: 'type_count', itemType: 'angelfish', target: 12, completed: false },
+            { id: 'angelfish_18', text: 'Habe 18 Skalare', type: 'type_count', itemType: 'angelfish', target: 18, completed: false },
+
+            // Garnelen (Shrimp)
+            { id: 'shrimp_5', text: 'Habe 5 Garnelen', type: 'type_count', itemType: 'shrimp', target: 5, completed: false },
+            { id: 'shrimp_12', text: 'Habe 12 Garnelen', type: 'type_count', itemType: 'shrimp', target: 12, completed: false },
+            { id: 'shrimp_20', text: 'Habe 20 Garnelen', type: 'type_count', itemType: 'shrimp', target: 20, completed: false },
+            { id: 'shrimp_28', text: 'Habe 28 Garnelen', type: 'type_count', itemType: 'shrimp', target: 28, completed: false },
+
+            // Kugelfische (Pufferfish)
+            { id: 'pufferfish_2', text: 'Habe 2 Kugelfische', type: 'type_count', itemType: 'pufferfish', target: 2, completed: false },
+            { id: 'pufferfish_5', text: 'Habe 5 Kugelfische', type: 'type_count', itemType: 'pufferfish', target: 5, completed: false },
+            { id: 'pufferfish_9', text: 'Habe 9 Kugelfische', type: 'type_count', itemType: 'pufferfish', target: 9, completed: false },
+            { id: 'pufferfish_14', text: 'Habe 14 Kugelfische', type: 'type_count', itemType: 'pufferfish', target: 14, completed: false },
+
+            // Zucht (große Fische)
+            { id: 'big_goldfish', text: 'Züchte einen großen Goldfisch', type: 'large_animal', itemType: 'goldfish', target: 1.4, completed: false },
+            { id: 'big_clownfish', text: 'Züchte einen großen Clownfisch', type: 'large_animal', itemType: 'clownfish', target: 1.4, completed: false },
+            { id: 'big_bluetang', text: 'Züchte einen großen Doktorfisch', type: 'large_animal', itemType: 'bluetang', target: 1.4, completed: false },
+            { id: 'giant_goldfish', text: 'Züchte einen riesigen Goldfisch', type: 'large_animal', itemType: 'goldfish', target: 1.8, completed: false }
+        ];
+
+        function checkAchievements() {
+            let counts = {};
+            let totalAnimals = 0;
+            let largestSize = {};
+
+            aquariumItems.forEach(item => {
+                if (item.isAnimal) {
+                    totalAnimals++;
+                    counts[item.type] = (counts[item.type] || 0) + 1;
+                    
+                    if (!largestSize[item.type] || item.sizeMultiplier > largestSize[item.type]) {
+                        largestSize[item.type] = item.sizeMultiplier;
+                    }
+                }
+            });
+
+            let activePool = achievements.filter(ach => !ach.completed).map(ach => {
+                let currentVal = 0;
+                if (ach.type === 'total_animals') {
+                    currentVal = totalAnimals;
+                } else if (ach.type === 'type_count') {
+                    currentVal = counts[ach.itemType] || 0;
+                } else if (ach.type === 'large_animal') {
+                    currentVal = largestSize[ach.itemType] || 1.0;
+                } else if (ach.type === 'stat') {
+                    currentVal = stats[ach.statKey] || 0;
+                }
+
+                ach.current = currentVal;
+                ach.progressRatio = Math.min(1, currentVal / ach.target);
+                return ach;
+            });
+
+            let newlyCompleted = activePool.filter(ach => ach.current >= ach.target);
+            if (newlyCompleted.length > 0) {
+                newlyCompleted.forEach(ach => {
+                    ach.completed = true;
+                    triggerAchievementComplete(ach);
+                });
+                activePool = achievements.filter(ach => !ach.completed);
+            }
+
+            activePool.sort((a, b) => {
+                let aHigh = a.progressRatio >= 0.7;
+                let bHigh = b.progressRatio >= 0.7;
+                if (aHigh && !bHigh) return -1;
+                if (!aHigh && bHigh) return 1;
+                
+                if (a.progressRatio !== b.progressRatio) {
+                    return b.progressRatio - a.progressRatio;
+                }
+                return achievements.indexOf(a) - achievements.indexOf(b);
+            });
+
+            let displayPool = activePool.slice(0, 3);
+            const container = document.getElementById('achievement-container');
+            container.innerHTML = '';
+
+            if (displayPool.length > 0) {
+                container.classList.remove('hidden');
+                container.classList.add('sm:flex');
+
+                displayPool.forEach(ach => {
+                    let percent = Math.min(100, ach.progressRatio * 100);
+                    
+                    let ratioText;
+                    if (ach.isMoney) {
+                        ratioText = `${ach.current.toFixed(2)} / ${ach.target.toFixed(2)} €`;
+                    } else if (ach.type === 'large_animal') {
+                        ratioText = `${ach.current.toFixed(2)} / ${ach.target.toFixed(2)}x`;
+                    } else {
+                        ratioText = `${Math.floor(ach.current)} / ${ach.target}`;
+                    }
+
+                    const achCard = document.createElement('div');
+                    achCard.className = "flex-1 min-w-0 bg-blue-900/60 px-2 py-1 rounded-lg border border-blue-500 text-left relative overflow-hidden transition-all duration-300";
+                    achCard.innerHTML = `
+                        <div class="flex justify-between items-center gap-1">
+                            <div class="flex items-center gap-1 min-w-0">
+                                <span class="text-xs shrink-0">🎯</span>
+                                <div class="text-[10px] font-bold text-blue-100 truncate">${ach.text}</div>
+                            </div>
+                            <span class="text-[9px] font-mono text-amber-300 font-bold shrink-0 ml-1">${ratioText}</span>
+                        </div>
+                        <div class="w-full bg-blue-950 rounded-full h-1 mt-1 border border-blue-800/50 overflow-hidden">
+                            <div class="bg-gradient-to-r from-yellow-400 to-amber-500 h-full rounded-full transition-all duration-300" style="width: ${percent}%;"></div>
+                        </div>
+                    `;
+                    container.appendChild(achCard);
+                });
+            } else {
+                container.innerHTML = '<div class="text-[11px] font-bold text-yellow-400 bg-blue-900/40 px-3 py-1 rounded-lg border border-yellow-500/30">👑 Alle Aufgaben geschafft!</div>';
+            }
+        }
+
+        function triggerAchievementComplete(ach) {
+            trophies++;
+            document.getElementById('trophy-count').innerText = trophies;
+
+            const display = document.getElementById('trophy-display');
+            display.classList.add('scale-110', 'border-yellow-400', 'bg-amber-600');
+            setTimeout(() => {
+                display.classList.remove('scale-110', 'border-yellow-400', 'bg-amber-600');
+            }, 600);
+
+            const popup = document.getElementById('achievement-popup');
+            document.getElementById('ach-popup-text').innerText = `"${ach.text}"`;
+            
+            popup.classList.remove('hidden');
+            popup.classList.add('flex');
+            
+            setTimeout(() => {
+                popup.classList.remove('opacity-0', 'scale-75');
+                popup.classList.add('opacity-100', 'scale-100');
+            }, 50);
+
+            setTimeout(() => {
+                popup.classList.remove('opacity-100', 'scale-100');
+                popup.classList.add('opacity-0', 'scale-75');
+                setTimeout(() => {
+                    popup.classList.add('hidden');
+                    popup.classList.remove('flex');
+                }, 500);
+            }, 3500);
+
+            checkAchievements();
+        }
 
         function startAnimalEvent() {
             if (activeEventType) endAnimalEvent();
@@ -700,7 +933,6 @@
             }
         }
 
-        // --- Werkzeuge: Kescher und Schwamm ---
         function disableTools() {
             isNetActive = false;
             isSpongeActive = false;
@@ -750,6 +982,7 @@
                 algaeCtx.fill();
                 algaeCtx.globalCompositeOperation = 'source-over'; 
                 
+                stats.algaeCleaned++;
                 lastAlgaeCleanTime = Date.now();
             }
         });
@@ -791,6 +1024,10 @@
         });
 
         function catchFish(item, index) {
+            if (item.type === 'blossom') {
+                stats.caughtBlossoms++;
+            }
+
             aquariumItems.splice(index, 1);
             item.element.remove();
             
@@ -823,9 +1060,11 @@
 
             currentInventoryValue += item.currentPrice;
             updateUI();
+            checkAchievements();
         }
 
         function catchEel(eel) {
+            stats.caughtEels++;
             eel.element.remove();
             currentEel = null;
             
@@ -854,6 +1093,7 @@
 
             currentInventoryValue += 1.00;
             updateUI();
+            checkAchievements();
         }
 
         function createBubbles() {
@@ -877,11 +1117,13 @@
 
             if (budget >= 0.20) {
                 budget -= 0.20;
+                stats.foodSpent += 0.20; 
                 updateUI();
                 const amount = Math.floor(Math.random() * 4) + 3;
                 for(let i=0; i<amount; i++) {
-                    spawnFoodParticle();
+                    foodParticles.push(new FoodParticle(tank.clientWidth * 0.1 + Math.random() * tank.clientWidth * 0.8, -10));
                 }
+                checkAchievements();
             } else {
                 foodBtn.classList.add('bg-red-200', 'rounded', 'transition-colors', 'duration-300');
                 setTimeout(() => foodBtn.classList.remove('bg-red-200', 'rounded', 'transition-colors', 'duration-300'), 300);
@@ -923,12 +1165,6 @@
             }
         }
 
-        function spawnFoodParticle() {
-            const x = tank.clientWidth * 0.1 + Math.random() * tank.clientWidth * 0.8;
-            const y = -10;
-            foodParticles.push(new FoodParticle(x, y));
-        }
-
         function formatCurrency(value) {
             return value.toFixed(2).replace('.', ',') + ' €';
         }
@@ -943,10 +1179,10 @@
                 
                 emptyInventoryText.style.display = 'block';
                 updateUI();
+                checkAchievements();
             }
         });
 
-        // --- Drag and Drop Logik mit Toleranz für Scrollen ---
         let potentialDragElement = null;
         let dragStartX = 0;
         let dragStartY = 0;
@@ -1023,23 +1259,19 @@
                     const dropX = e.clientX - tankRect.left - offsetX;
                     const dropY = e.clientY - tankRect.top - offsetY;
                     
-                    // Fisch aus Beutel freigeben
                     const itemType = draggedBagSourceElement.getAttribute('data-item-type');
                     const itemPrice = parseFloat(draggedBagSourceElement.getAttribute('data-item-price'));
                     const itemSize = parseFloat(draggedBagSourceElement.getAttribute('data-item-size'));
                     const itemHue = parseInt(draggedBagSourceElement.getAttribute('data-item-hue'));
                     
-                    // SVG aus dem Beutel klonen
                     const svgInBag = draggedBagSourceElement.querySelector('svg');
                     const itemSvg = svgInBag ? svgInBag.outerHTML : '';
                     
                     if (itemType === 'eel') {
-                        // Röhrenaal wieder ins Aquarium
                         const eel = new GardenEel();
                         eel.x = dropX;
                         eel.y = dropY;
                     } else {
-                        // Normaler Fisch/Tier wieder ins Aquarium
                         const releasedItem = spawnItem(itemType, dropX, dropY, itemSvg, itemPrice, itemHue);
                         releasedItem.sizeMultiplier = itemSize;
                         releasedItem.currentPrice = itemPrice;
@@ -1049,7 +1281,6 @@
                         }
                     }
                     
-                    // Beutel aus Inventar entfernen
                     draggedBagSourceElement.remove();
                     currentInventoryValue -= itemPrice;
                     updateUI();
@@ -1062,9 +1293,8 @@
             cancelDragBag();
         }
 
-
         function startDrag(e) {
-            if (aquariumItems.length >= MAX_AQUARIUM_ITEMS) return; // Wenn Limit erreicht, Drag komplett verbieten
+            if (aquariumItems.length >= MAX_AQUARIUM_ITEMS) return; 
             
             disableTools();
             potentialDragElement = e.currentTarget;
@@ -1107,7 +1337,6 @@
                     draggedElement.style.zIndex = '9999';
                     draggedElement.classList.remove('hover:scale-110');
                     
-                    // Sicherstellen, dass das gezogene Element die richtige Größe behält
                     const rect = potentialDragElement.getBoundingClientRect();
                     draggedElement.style.width = `${rect.width}px`;
                     draggedElement.style.height = `${rect.height}px`;
@@ -1220,7 +1449,6 @@
             updateTransform() {
                 this.element.style.transform = `translate(${this.x}px, ${this.y}px)`;
                 
-                // Mathematik für die Bewegung des oberen Teils
                 let rad = this.currentAngle * Math.PI / 180;
                 let neckLength = 45;
                 let hX = 30 + Math.sin(rad) * neckLength;
@@ -1272,7 +1500,6 @@
                 this.element.innerHTML = svgContent;
                 this.svgElement = this.element.querySelector('svg');
                 
-                // SVG-Styling aus der mobilen Leiste zurücksetzen, damit es normal skaliert
                 this.svgElement.classList.remove('h-full', 'w-auto');
                 
                 if (this.hueRotate > 0) {
@@ -1323,7 +1550,6 @@
             }
 
             pickNewTarget() {
-                // Bessere Ausnutzung der Beckenbreite und -höhe
                 const padX = (this.width * this.sizeMultiplier) / 4;
                 const minX = padX;
                 const maxX = tank.clientWidth - padX;
@@ -1332,10 +1558,9 @@
                 if (this.type === 'shrimp') {
                     this.targetY = tank.clientHeight - 60 - Math.random() * 40;
                 } else {
-                    // Volle Tiefe nutzen statt nur +/- 50px
                     const padY = (this.height * this.sizeMultiplier) / 2;
-                    const minY = padY + 20; // Wasseroberfläche
-                    const maxY = tank.clientHeight - padY - 60; // Sandboden
+                    const minY = padY + 20; 
+                    const maxY = tank.clientHeight - padY - 60; 
                     
                     this.targetY = minY + Math.random() * (maxY - minY);
                 }
@@ -1385,7 +1610,6 @@
                                 <path d="M12 2 C15 5 15 8 12 8 C9 8 9 5 12 2 Z" fill="#f472b6" transform="rotate(288 12 12)"/>
                             </svg>`;
                         const babyBlossom = spawnItem('blossom', this.x + 10, this.y - (this.height * this.sizeMultiplier) + 20, blossomSvg, 3.00, 0); 
-                        // Blütengröße der Mutterpflanze angleichen
                         babyBlossom.sizeMultiplier = this.sizeMultiplier;
                         babyBlossom.svgElement.style.transform = `scale(${babyBlossom.sizeMultiplier})`;
                     }
@@ -1570,6 +1794,7 @@
         function spawnItem(type, x, y, svgContent, price, hueRotate = 0) {
             const item = new AquariumItem(type, x, y, svgContent, price, hueRotate);
             aquariumItems.push(item);
+            checkAchievements();
             return item; 
         }
 
@@ -1584,7 +1809,7 @@
         }
 
         function checkBreeding() {
-            if (aquariumItems.length >= MAX_AQUARIUM_ITEMS) return; // Zuchtstop bei Limit
+            if (aquariumItems.length >= MAX_AQUARIUM_ITEMS) return; 
 
             const now = Date.now();
             for (let i = 0; i < aquariumItems.length; i++) {
@@ -1627,15 +1852,20 @@
             }
         }
 
+        let frameCounter = 0;
         function gameLoop() {
-            // Nach 90 Sekunden beginnen die Algen langsam zu wachsen
+            frameCounter++;
+            
+            if (frameCounter % 15 === 0) {
+                checkAchievements();
+            }
+
             if (Date.now() - lastAlgaeCleanTime > 90000) { 
                 if (Math.random() < 0.02) { 
                     drawAlgaePatch(Math.random() * algaeCanvas.width, Math.random() * algaeCanvas.height);
                 }
             }
 
-            // Limit prüfen und visuell anzeigen
             if (aquariumItems.length >= MAX_AQUARIUM_ITEMS) {
                 limitOverlay.classList.remove('hidden');
                 limitOverlay.classList.add('flex');
@@ -1668,6 +1898,7 @@
             requestAnimationFrame(gameLoop);
         }
 
+        checkAchievements();
         gameLoop();
     </script>
 </body>
